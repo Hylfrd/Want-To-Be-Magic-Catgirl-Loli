@@ -338,7 +338,7 @@
       "model": "gpt-6.1-sol",
       "reasoning_effort": "xhigh",
       "status": "completed",
-      "transcript_status": "pending_final",
+      "transcript_status": "complete",
       "messages": [
         {
           "id": "msg_01a12bfa-c524-7320-9276-52c07d2eb75d",
@@ -370,17 +370,68 @@
           "timestamp": null,
           "text": "Hi Apostrophe! 规则文件已确认在远端 main。最后的推送检查发现，main 还有另外两个进行中会话的记录提交；按 AGENTS.md 的保护规则，这些无关提交会阻止我继续推送。本会话记录先完成本地提交，桌面文档不受影响。",
           "attachments": []
+        },
+        {
+          "id": "cc4e939f-6252-5cf6-b393-4cea29beb265",
+          "role": "assistant",
+          "kind": "final",
+          "timestamp": null,
+          "text": "Hi Apostrophe! 好了，规则文档已提交到 **main**，并确认已在远端。\n\n桌面双语版：[英文](C:/Users/Apostrophe/Desktop/Catgirl-AGENTS/AGENTS.md) · [中文](C:/Users/Apostrophe/Desktop/Catgirl-AGENTS/AGENTS.zh-CN.md)。\n\n- 默认不新增测试，明确禁止七类“顺便做”。\n- 禁止创建分支、tag、issue、PR，直接提交 main。\n- Full subsession 和 DRD 已移入 `docs/`，补上入口、无用会话归档、监视和假死恢复规则。\n\n注意：并行会话的 Git 写入必须串行；重启前须确认旧会话停止。你自行处理的分支未改动。\n\n本会话记录已本地提交；main 另有两个进行中会话的提交，按 AGENTS.md 的无关提交保护规则，最后一次推送暂缓。",
+          "attachments": []
+        }
+      ],
+      "subagent_logs": [],
+      "redactions": [],
+      "gaps": []
+    },
+    {
+      "number": 8,
+      "turn_id": "01a12c06-7d8f-7110-91c0-62e3aa27a3b0",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "xhigh",
+      "status": "completed",
+      "transcript_status": "pending_final",
+      "messages": [
+        {
+          "id": "msg_01a12c06-7dd4-75a0-8575-21aa362f15ac",
+          "role": "user",
+          "timestamp": "2026-10-11T17:33:05.364Z",
+          "text": "我们再来设置一个东西：注释。我认为需要增加易读性，但是gpt自己往代码里加的注释实在是太多太长了，你有什么好的想法吗\n",
+          "attachments": []
+        },
+        {
+          "id": "0a5c4d14-2177-408e-90ee-20a80b476c84",
+          "role": "assistant",
+          "kind": "progress",
+          "timestamp": null,
+          "text": "Hi Apostrophe! 我先给你一套简短、可执行的注释规则建议，这轮先讨论。",
+          "attachments": []
+        },
+        {
+          "id": "eb4f1caa-1391-4819-a750-86ce3cc978df",
+          "role": "user",
+          "timestamp": null,
+          "text": "附：我们已经打算通过 Java＋ARCore 原生 Android 的路线，DRD会稍后更新",
+          "attachments": []
+        },
+        {
+          "id": "3ddcd0d4-10a0-4927-8c49-38a7d8fb3382",
+          "role": "assistant",
+          "timestamp": null,
+          "text": "Hi Apostrophe! 收到，当前路线以 **Java + ARCore 原生 Android** 为准，DRD 等稍后更新。注释建议也会按 Java 来写；这条补充不会触发额外代码或文档修改。",
+          "attachments": [],
+          "kind": "progress"
         }
       ],
       "subagent_logs": [],
       "redactions": [],
       "gaps": [],
       "pending_final": {
-        "id": "cc4e939f-6252-5cf6-b393-4cea29beb265",
+        "id": "f4df2705-fa77-4654-be84-374286e6bf35",
         "role": "assistant",
         "kind": "final",
         "timestamp": null,
-        "text": "Hi Apostrophe! 好了，规则文档已提交到 **main**，并确认已在远端。\n\n桌面双语版：[英文](C:/Users/Apostrophe/Desktop/Catgirl-AGENTS/AGENTS.md) · [中文](C:/Users/Apostrophe/Desktop/Catgirl-AGENTS/AGENTS.zh-CN.md)。\n\n- 默认不新增测试，明确禁止七类“顺便做”。\n- 禁止创建分支、tag、issue、PR，直接提交 main。\n- Full subsession 和 DRD 已移入 `docs/`，补上入口、无用会话归档、监视和假死恢复规则。\n\n注意：并行会话的 Git 写入必须串行；重启前须确认旧会话停止。你自行处理的分支未改动。\n\n本会话记录已本地提交；main 另有两个进行中会话的提交，按 AGENTS.md 的无关提交保护规则，最后一次推送暂缓。",
+        "text": "Hi Apostrophe! 收到，项目路线按 **Java + ARCore 原生 Android**，DRD 稍后更新。\n\n注释建议规定：**补充代码中不明显的原因、约束和风险，默认不要求每段代码都有注释。**\n\n可以加这五条：\n\n- **说明原因。** 解释特殊业务规则、生命周期或线程限制、算法取舍、实际兼容问题；不逐行翻译代码，不重复方法名。\n- **默认简短。** 通常 1–2 行；超过 3 行先删重复信息。复杂算法或关键约束允许保留最短的完整解释，不硬卡字数。\n- **没有数量指标。** 不要求每个方法都有 Javadoc，不追求注释覆盖率，不自动堆砌 `@param`、`@return` 模板。\n- **不在注释中扩展任务。** 不写假想功能、未经要求的 TODO、修改流水账或长篇设计背景；已有设计文档可直接引用。\n- **只维护本次涉及的注释。** 修改逻辑时同步修正失效注释，不开展全仓库补注释或借此重构。\n\n例如，这种注释解释了值得保留的原因：\n\n```java\n// Ignore stale responses so an older request cannot replace the latest result.\nif (requestId != latestRequestId) {\n    return;\n}\n```\n\n判断标准：**删掉这条注释，读者是否容易误解行为或误改关键逻辑？** 如果不会，通常就不用写。\n\n这轮未修改 AGENTS.md 或 DRD；会话记录已本地提交，推送仍因其他会话的提交暂缓。",
         "attachments": []
       }
     }
