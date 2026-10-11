@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "conversation_id": "01a12bcc-a868-7f42-9ac5-ef61d8592fdc",
-  "title": "DRD navigation algorithm discussion",
+  "title": "Campus navigation complete design",
   "participant": "Apostrophe",
   "client": "codex-app",
   "agent": {
@@ -75,7 +75,7 @@
       "model": "gpt-6.1-sol",
       "reasoning_effort": "xhigh",
       "status": "completed",
-      "transcript_status": "pending_final",
+      "transcript_status": "complete",
       "messages": [
         {
           "id": "msg_01a12bd1-c4c3-7943-82cd-09f696d9417f",
@@ -107,17 +107,96 @@
           "text": "Hi Apostrophe! 此前的 11 条未推送提交已推送到远程 `main`，远程提交号也已核对。\n\n资料确认，Dijkstra／A* 可以最小化包含时间、体力和辨路负担的总代价。需要特别设计的是电梯候梯时间、转弯来向，以及“偏好电梯”和“禁止楼梯”的区别。现成库可复用寻路实现，这些规则仍需要我们定义。\n",
           "attachments": [],
           "kind": "progress"
+        },
+        {
+          "id": "msg_09272e9fd7e3a2bf016acbbc59da508191a12e697985a1f990",
+          "role": "assistant",
+          "timestamp": "2026-10-11T16:42:36.602Z",
+          "text": "Hi Apostrophe! 此前的 11 条未推送提交已经全部推送到远程 `main`，并核对成功。\n\n**我的初步建议是：用有向加权路网表达校园，以 Dijkstra／A* 作为基础，按不同通行条件和偏好生成候选路线。**这能覆盖楼梯、斜坡、电梯和“距离短但不好走”的需求，已有库可直接复用。\n\n先澄清一个关键概念：**“最短路径算法”可以寻找总代价最低的路线，代价不必是米数。**把权重设成时间，就寻找最快路线；把时间、体力和辨路负担组合起来，就寻找符合该套评价规则的路线。算法保证的是“模型里的最优”，真实体验是否更好取决于数据和权重是否合理。[NetworkX 加权路径说明](https://networkx.org/documentation/networkx-3.6/reference/algorithms/shortest_paths/index.html)\n\n地图可以理解成一张连接表：节点是入口、岔路、目的地、楼梯口和电梯厅；边是允许通行的连接。每条边保存长度、方向、通行类型等属性。上楼和下楼可以有不同代价，所以建议使用**有向图**。\n\n常见算法中，与我们最相关的是以下几类。这里 `V` 是节点数，`E` 是连接数，`K` 是需要返回的候选路线数。\n\n| 算法 | 怎样工作、适合什么 | 速度、复杂度与最优性 |\n| --- | --- | --- |\n| **Dijkstra** | 从当前累计代价最低的节点继续搜索；适合非负权重、规则复杂的路网 | 常见二叉堆实现约 `O((V+E) log V)`；能求给定代价下的最优路线，无需估计离终点还有多少代价 |\n| **A\\*** | 在累计代价之外，加上“到终点还需要多少代价”的估计，优先搜索更有希望的方向 | 好的估计通常减少搜索量；估计不能高估剩余代价，才有相应的最优性保证；不保证一定比 Dijkstra 快 |\n| **双向 Dijkstra／A\\*** | 从起点和终点两侧搜索，按正确的终止条件衔接 | 适合单起点、单终点查询，可能减少搜索；有向图需要正确处理反向连接 |\n| **Yen／K 最短无环路径** | 按总代价顺序寻找多条不重复经过节点的路线 | 比求一条路线贵，`K` 越大开销越大；候选可能高度重叠，仍需筛选有实际区别的路线 |\n| **多目标寻路，如 Martins** | 同时保留“时间更短”和“体力更省”等不同取舍，不先压成一个分数 | 能寻找互不全面劣于其他路线的方案；需要保留多个标签，计算与内存负担可能显著增大 |\n| **D\\* Lite／LPA\\*** | 地图局部变化后，复用上一次搜索的信息进行重规划 | 适合频繁变化的连接或代价；实现和状态维护更复杂，收益取决于实际变化模式 |\n\nDijkstra／A* 的复杂度可参照 [Boost 算法说明](https://www.boost.org/doc/libs/latest/libs/graph/doc/html/graph/algorithms/shortest_paths/shortest_paths_overview.html)；其余有 [双向实现](https://jgrapht.org/javadoc/org.jgrapht.core/org/jgrapht/alg/shortestpath/BidirectionalDijkstraShortestPath.html)、[Yen 实现](https://jgrapht.org/javadoc/org.jgrapht.core/org/jgrapht/alg/shortestpath/YenKShortestPath.html)、[Martins 实现](https://jgrapht.org/javadoc/org.jgrapht.core/org/jgrapht/alg/shortestpath/MartinShortestPath.html)及 [D* Lite 原论文介绍](https://publications.ri.cmu.edu/d-lite)。\n\nBFS 适合每条连接代价相同的情况；Floyd–Warshall 计算所有节点对之间的路径，时间为 `O(V³)`，不适合作为大路网每次导航查询的默认方案。\n\n你提到的楼梯、电梯和斜坡，需要先明确下面三种规则：\n\n| 规则 | 例子 | 应怎样表达 |\n| --- | --- | --- |\n| **硬约束：不允许经过** | 禁止楼梯、通道关闭、坡度超过用户允许范围 | 搜索前过滤这些连接；不能只加一个很大的惩罚值，否则其他路线更贵时仍可能选中它 |\n| **软偏好：尽量避免** | 更喜欢电梯，但必要时接受楼梯 | 提高楼梯的体力或偏好代价，允许与绕行和候梯时间比较 |\n| **优先级：先满足一项，再比较其他项** | 有符合条件的无楼梯路线时优先使用，否则才考虑楼梯 | 分阶段搜索或采用明确的优先级；回退行为必须由产品规则定义 |\n\n因此，“能坐电梯就不走楼梯”需要明确属于哪一种。如果严格禁止楼梯，而电梯停运、又没有可用坡道，结果应是“没有符合条件的路线”。\n\n权重可以先从一个可解释的形式讨论：\n\n```text\n连接代价 = 预计通过时间\n         + 体力负担的偏好惩罚\n         + 辨路负担的偏好惩罚\n```\n\n惩罚系数控制使用者愿意多花多少时间换取省力或容易辨认。**总代价用于排序，实际预计时间和距离要单独保存、展示**，不能把偏好惩罚当成真实耗时。权重保持非负，电梯偏好可以通过增加楼梯代价表达。\n\n参数可分为三组：**地图参数**，例如长度、坡度、台阶数、通行状态；**用户与时间估计参数**，例如步行速度、爬楼负担、候梯估计、最大允许坡度；**搜索参数**，例如候选数量 `K`、A* 的剩余代价估计。A* 的估计必须与总代价使用同一单位；时间代价不能直接搭配以米为单位的直线距离。不确定怎样构造可靠下界时，可以先令估计为零，其搜索行为退回 Dijkstra。\n\n例如以下仅是演示数据：\n\n| 路线 | 距离 | 预计耗时，含候梯 | 特征 |\n| --- | ---: | ---: | --- |\n| A：楼梯捷径 | 80 m | 90 s | 上两层楼 |\n| B：电梯路线 | 120 m | 110 s | 无楼梯，包含候梯 |\n| C：坡道路线 | 160 m | 150 s | 无楼梯，需要持续爬坡 |\n\n最快偏好可能选 A；增加上楼的体力惩罚后可能选 B；禁止楼梯时只比较 B、C。**这些变化可以由同一个 Dijkstra／A* 实现处理。**\n\n有几处模型细节会直接影响正确性：\n\n- **电梯候梯时间应在每次登梯时计入一次。**连续乘同一部电梯经过几层，不能每经过一层都重新收一次候梯代价。可区分候梯、乘梯、出梯连接。\n- **斜坡和楼梯要保存方向及物理属性。**坡度、上升高度、台阶数量等是原始数据；不同用户对应不同偏好参数。\n- **转弯或辨路代价可能取决于来向。**如果同一个岔路从不同方向进入会产生不同负担，需要把“位置＋来向”纳入搜索状态，普通的节点固定惩罚不足以表达。\n- **电梯等待如果取决于到达时刻，就属于时间相关寻路。**初期可使用标明来源的等待估计；精确按到达时刻计算时，需要相应算法及等待规则，普通静态权重函数不能自动解决。\n\n对于“节点非常多”，目前还没有实际节点数量，不能据此判定基础算法会太慢。寻路节点应围绕通行和决策位置建立；长走廊的形状可存成一条边的折线。AR 显示时沿折线采样，三维模型顶点和视觉跟踪特征点无需逐个成为寻路节点。\n\nAR 的实时性也要分开看：**手机持续更新位姿和渲染，后端在目的地、偏好、通行状态改变或确认偏航时重新规划。**通常无需每一帧都跑寻路。性能应在实际路网和服务器上测单次查询、并发及 P95 延迟，也就是约 95% 请求能在多少时间内完成；现在不能承诺具体毫秒数。\n\n可直接复用的实现如下：\n\n| 方案 | 能复用什么 | 对我们的适配判断 |\n| --- | --- | --- |\n| **NetworkX，Python** | `dijkstra_path`、`astar_path`、基于 Yen 的 `shortest_simple_paths`，支持自定义权重 | 适合先验证路网和偏好规则；其 Yen 接口不支持 `MultiDiGraph`，平行通路需要相应建模。[Dijkstra 接口](https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.shortest_paths.weighted.single_source_dijkstra.html)、[Yen 接口](https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.simple_paths.shortest_simple_paths.html) |\n| **rustworkx，Python 接口／Rust 核心** | Dijkstra、A*、有向图和自定义连接代价 | 可以作为性能候选，Python 后端无需因此整体改写；API 与 NetworkX 不同，需要适配，具体速度应实测。[官方文档](https://www.rustworkx.org/) |\n| **JGraphT，Java** | Dijkstra、A*、双向搜索、Yen、Martins 多目标寻路 | 如果需要现成的多目标实现，值得比较；是否采用 Java 后端仍需另行决定。[多目标接口](https://jgrapht.org/javadoc/org.jgrapht.core/org/jgrapht/alg/shortestpath/MartinShortestPath.html) |\n| **pgRouting，PostgreSQL 扩展** | 在数据库中运行 Dijkstra、A*、K 最短路径等 | 适合路网已采用 PostgreSQL／PostGIS 的方案，需要承担数据库集成工作。[官方算法目录](https://docs.pgrouting.org/latest/en/) |\n\n**当前我更倾向先用 NetworkX 验证“有向路网＋通行约束＋可解释代价”，以 Dijkstra 作基准，再比较 A* 和 rustworkx。**候选路线可以分别按最快、省力、无楼梯等规则计算，再去重比较；这样能主动寻找有不同用途的路线。只取“距离最短的前 K 条”再打分，可能漏掉稍远但更省力的路线。多个偏好方案也不等于完整的多目标最优集合。\n\n本轮讨论记录已本地保存、单独提交并推送到 `main`；算法与参数仍是讨论候选。",
+          "attachments": [],
+          "kind": "final"
         }
       ],
       "subagent_logs": [],
       "redactions": [],
+      "gaps": []
+    },
+    {
+      "number": 3,
+      "turn_id": "01a12bdb-dd7c-7053-97fe-c72a8243682b",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "xhigh",
+      "status": "completed",
+      "transcript_status": "pending_final",
+      "messages": [
+        {
+          "id": "msg_01a12bdb-de0b-7cc1-b02a-6c0ac5b81d46",
+          "role": "user",
+          "timestamp": "2026-10-11T16:46:31.948Z",
+          "text": "先研究不仅是包括楼梯、斜坡、电梯这三种情况，因为这只是我突然想到的，显然肯定不止这种情况。而且还会存在各种复杂情况，例如存在一个广场，我可以将广场上的每个出口定义端点，但显然复杂度直线上升。我暂时没有想到除了楼梯、斜坡和电梯等其他的需要的边界情况，但我们学校存在海拔波动，同时存在极少数的小路是由石板+草地构成的（虽然被踩烂了）。我需要你考虑这些边界情况，并考虑复用已有项目等，并出一个最终的完整设计\n",
+          "attachments": []
+        },
+        {
+          "id": "msg_09272e9fd7e3a2bf016acbbd7c04fc81918d64048a01e3b052",
+          "role": "assistant",
+          "timestamp": "2026-10-11T16:47:00.212Z",
+          "text": "Hi Apostrophe! 我会把范围扩展到校园室内外的完整通行情况，重点研究开放广场、地形高差、不同路面、复杂连接和临时变化，并核对可复用项目。这个任务会使用 deep-research skill，最后形成可落入 DRD 的完整导航设计，明确选型、数据模型、路线评价和能力边界。\n",
+          "attachments": [],
+          "kind": "progress"
+        },
+        {
+          "id": "msg_09272e9fd7e3a2bf016acbbdb8df0c819182cd2495ee21c102",
+          "role": "assistant",
+          "timestamp": "2026-10-11T16:48:09.105Z",
+          "text": "Hi Apostrophe! 广场带来的是地图表达方式的问题：开放区域可以用可通行面和相邻面之间的连接来搜索，出口只负责接入路网，不必预先给所有出口两两连线。增加几个出口本身也不意味着节点数会爆炸。\n\n我会并行核验两部分资料：现成人行导航引擎的复用能力，以及地形、路面和通行限制的边界；我负责把它们整合成方案，并处理广场和 AR 路线几何。\n",
+          "attachments": [],
+          "kind": "progress"
+        },
+        {
+          "id": "msg_09272e9fd7e3a2bf016acbbee07da08191922b2c21761ad2d8",
+          "role": "assistant",
+          "timestamp": "2026-10-11T16:52:49.465Z",
+          "text": "Hi Apostrophe! 已发现两个会影响选型的限制：OpenSidewalks 的广场模型采用出口完全图，PPR 的开放区域处理也有较高的预计算开销，不能原样复用来解决你担心的复杂度。\n\n另外，海拔起伏需要保存沿途高度或分段坡度；只看起终点高差会漏掉“先上坡再下坡”。石板与草地混合的小路也要分别记录路面状况和通行许可，不能仅凭被踩出痕迹就认定允许通行。\n",
+          "attachments": [],
+          "kind": "progress"
+        },
+        {
+          "id": "msg_09272e9fd7e3a2bf016acbc00c23c48191bda5980b6ae1504e",
+          "role": "assistant",
+          "timestamp": "2026-10-11T16:57:49.357Z",
+          "text": "Hi Apostrophe! 我选定的设计提案是：**Recast／Detour 处理可通行几何，稀疏有向状态图表达通路和设施，Dijkstra 负责路线搜索，独立规则层处理限制与偏好。**\n\n现成人行引擎有很多可借用的能力，但已核对的实现都有缺口。我会明确写出复用范围，以及哪些校园属性、路线规则和 AR 输出需要我们补齐；也会说明离散搜索与连续空间最优路径之间的差别。\n",
+          "attachments": [],
+          "kind": "progress"
+        },
+        {
+          "id": "msg_09272e9fd7e3a2bf016acbc0f5d05081918b00b315aadcc869",
+          "role": "assistant",
+          "timestamp": "2026-10-11T17:02:00.718Z",
+          "text": "Hi Apostrophe! 完整设计已写出，覆盖 18 类边界，并明确了地图数据、广场建模、路线代价、电梯状态、动态封路和 AR 输出。\n\n考虑到另一会话正在讨论离线导航，我把推荐搜索库收敛为 **Boost.Graph**，与 Recast／Detour 组成 C++ 内核。服务器先执行它；若以后决定手机离线重规划，可评估复用同一内核。当前正在复核设计和保存研究记录，DRD 的修改会等对方完成当前编辑后再接入。\n",
+          "attachments": [],
+          "kind": "progress"
+        },
+        {
+          "id": "msg_09272e9fd7e3a2bf016acbc285c94881919b8815b51d46a572",
+          "role": "assistant",
+          "kind": "progress",
+          "timestamp": "2026-10-11T17:08:22.821Z",
+          "text": "Hi Apostrophe! 导航设计已接入 DRD v0.3，并保留了另一会话刚确认的“手机采集上传、服务器建图”分工。设计文档已单独提交；研究记录会另作一次提交，随后核对待推送范围。\n",
+          "attachments": []
+        }
+      ],
+      "subagent_logs": [
+        "ai-logs/subagent/2026-10-11T16-48-09Z-pedestrian-engines--01a12bdd-59ad-7770-b6a2-ce359ad5aba3.json",
+        "ai-logs/subagent/2026-10-11T16-48-21Z-boundary-catalog--01a12bdd-8a60-7cb3-8501-71647cebac64.json"
+      ],
+      "redactions": [],
       "gaps": [],
       "pending_final": {
-        "id": "75c25af9-e6eb-4d9b-a90a-07ce9261580f",
+        "id": "6ae25c58-93a1-4c60-a5b0-7f5b1b2d56b7",
         "role": "assistant",
         "kind": "final",
         "timestamp": null,
-        "text": "Hi Apostrophe! 此前的 11 条未推送提交已经全部推送到远程 `main`，并核对成功。\n\n**我的初步建议是：用有向加权路网表达校园，以 Dijkstra／A* 作为基础，按不同通行条件和偏好生成候选路线。**这能覆盖楼梯、斜坡、电梯和“距离短但不好走”的需求，已有库可直接复用。\n\n先澄清一个关键概念：**“最短路径算法”可以寻找总代价最低的路线，代价不必是米数。**把权重设成时间，就寻找最快路线；把时间、体力和辨路负担组合起来，就寻找符合该套评价规则的路线。算法保证的是“模型里的最优”，真实体验是否更好取决于数据和权重是否合理。[NetworkX 加权路径说明](https://networkx.org/documentation/networkx-3.6/reference/algorithms/shortest_paths/index.html)\n\n地图可以理解成一张连接表：节点是入口、岔路、目的地、楼梯口和电梯厅；边是允许通行的连接。每条边保存长度、方向、通行类型等属性。上楼和下楼可以有不同代价，所以建议使用**有向图**。\n\n常见算法中，与我们最相关的是以下几类。这里 `V` 是节点数，`E` 是连接数，`K` 是需要返回的候选路线数。\n\n| 算法 | 怎样工作、适合什么 | 速度、复杂度与最优性 |\n| --- | --- | --- |\n| **Dijkstra** | 从当前累计代价最低的节点继续搜索；适合非负权重、规则复杂的路网 | 常见二叉堆实现约 `O((V+E) log V)`；能求给定代价下的最优路线，无需估计离终点还有多少代价 |\n| **A\\*** | 在累计代价之外，加上“到终点还需要多少代价”的估计，优先搜索更有希望的方向 | 好的估计通常减少搜索量；估计不能高估剩余代价，才有相应的最优性保证；不保证一定比 Dijkstra 快 |\n| **双向 Dijkstra／A\\*** | 从起点和终点两侧搜索，按正确的终止条件衔接 | 适合单起点、单终点查询，可能减少搜索；有向图需要正确处理反向连接 |\n| **Yen／K 最短无环路径** | 按总代价顺序寻找多条不重复经过节点的路线 | 比求一条路线贵，`K` 越大开销越大；候选可能高度重叠，仍需筛选有实际区别的路线 |\n| **多目标寻路，如 Martins** | 同时保留“时间更短”和“体力更省”等不同取舍，不先压成一个分数 | 能寻找互不全面劣于其他路线的方案；需要保留多个标签，计算与内存负担可能显著增大 |\n| **D\\* Lite／LPA\\*** | 地图局部变化后，复用上一次搜索的信息进行重规划 | 适合频繁变化的连接或代价；实现和状态维护更复杂，收益取决于实际变化模式 |\n\nDijkstra／A* 的复杂度可参照 [Boost 算法说明](https://www.boost.org/doc/libs/latest/libs/graph/doc/html/graph/algorithms/shortest_paths/shortest_paths_overview.html)；其余有 [双向实现](https://jgrapht.org/javadoc/org.jgrapht.core/org/jgrapht/alg/shortestpath/BidirectionalDijkstraShortestPath.html)、[Yen 实现](https://jgrapht.org/javadoc/org.jgrapht.core/org/jgrapht/alg/shortestpath/YenKShortestPath.html)、[Martins 实现](https://jgrapht.org/javadoc/org.jgrapht.core/org/jgrapht/alg/shortestpath/MartinShortestPath.html)及 [D* Lite 原论文介绍](https://publications.ri.cmu.edu/d-lite)。\n\nBFS 适合每条连接代价相同的情况；Floyd–Warshall 计算所有节点对之间的路径，时间为 `O(V³)`，不适合作为大路网每次导航查询的默认方案。\n\n你提到的楼梯、电梯和斜坡，需要先明确下面三种规则：\n\n| 规则 | 例子 | 应怎样表达 |\n| --- | --- | --- |\n| **硬约束：不允许经过** | 禁止楼梯、通道关闭、坡度超过用户允许范围 | 搜索前过滤这些连接；不能只加一个很大的惩罚值，否则其他路线更贵时仍可能选中它 |\n| **软偏好：尽量避免** | 更喜欢电梯，但必要时接受楼梯 | 提高楼梯的体力或偏好代价，允许与绕行和候梯时间比较 |\n| **优先级：先满足一项，再比较其他项** | 有符合条件的无楼梯路线时优先使用，否则才考虑楼梯 | 分阶段搜索或采用明确的优先级；回退行为必须由产品规则定义 |\n\n因此，“能坐电梯就不走楼梯”需要明确属于哪一种。如果严格禁止楼梯，而电梯停运、又没有可用坡道，结果应是“没有符合条件的路线”。\n\n权重可以先从一个可解释的形式讨论：\n\n```text\n连接代价 = 预计通过时间\n         + 体力负担的偏好惩罚\n         + 辨路负担的偏好惩罚\n```\n\n惩罚系数控制使用者愿意多花多少时间换取省力或容易辨认。**总代价用于排序，实际预计时间和距离要单独保存、展示**，不能把偏好惩罚当成真实耗时。权重保持非负，电梯偏好可以通过增加楼梯代价表达。\n\n参数可分为三组：**地图参数**，例如长度、坡度、台阶数、通行状态；**用户与时间估计参数**，例如步行速度、爬楼负担、候梯估计、最大允许坡度；**搜索参数**，例如候选数量 `K`、A* 的剩余代价估计。A* 的估计必须与总代价使用同一单位；时间代价不能直接搭配以米为单位的直线距离。不确定怎样构造可靠下界时，可以先令估计为零，其搜索行为退回 Dijkstra。\n\n例如以下仅是演示数据：\n\n| 路线 | 距离 | 预计耗时，含候梯 | 特征 |\n| --- | ---: | ---: | --- |\n| A：楼梯捷径 | 80 m | 90 s | 上两层楼 |\n| B：电梯路线 | 120 m | 110 s | 无楼梯，包含候梯 |\n| C：坡道路线 | 160 m | 150 s | 无楼梯，需要持续爬坡 |\n\n最快偏好可能选 A；增加上楼的体力惩罚后可能选 B；禁止楼梯时只比较 B、C。**这些变化可以由同一个 Dijkstra／A* 实现处理。**\n\n有几处模型细节会直接影响正确性：\n\n- **电梯候梯时间应在每次登梯时计入一次。**连续乘同一部电梯经过几层，不能每经过一层都重新收一次候梯代价。可区分候梯、乘梯、出梯连接。\n- **斜坡和楼梯要保存方向及物理属性。**坡度、上升高度、台阶数量等是原始数据；不同用户对应不同偏好参数。\n- **转弯或辨路代价可能取决于来向。**如果同一个岔路从不同方向进入会产生不同负担，需要把“位置＋来向”纳入搜索状态，普通的节点固定惩罚不足以表达。\n- **电梯等待如果取决于到达时刻，就属于时间相关寻路。**初期可使用标明来源的等待估计；精确按到达时刻计算时，需要相应算法及等待规则，普通静态权重函数不能自动解决。\n\n对于“节点非常多”，目前还没有实际节点数量，不能据此判定基础算法会太慢。寻路节点应围绕通行和决策位置建立；长走廊的形状可存成一条边的折线。AR 显示时沿折线采样，三维模型顶点和视觉跟踪特征点无需逐个成为寻路节点。\n\nAR 的实时性也要分开看：**手机持续更新位姿和渲染，后端在目的地、偏好、通行状态改变或确认偏航时重新规划。**通常无需每一帧都跑寻路。性能应在实际路网和服务器上测单次查询、并发及 P95 延迟，也就是约 95% 请求能在多少时间内完成；现在不能承诺具体毫秒数。\n\n可直接复用的实现如下：\n\n| 方案 | 能复用什么 | 对我们的适配判断 |\n| --- | --- | --- |\n| **NetworkX，Python** | `dijkstra_path`、`astar_path`、基于 Yen 的 `shortest_simple_paths`，支持自定义权重 | 适合先验证路网和偏好规则；其 Yen 接口不支持 `MultiDiGraph`，平行通路需要相应建模。[Dijkstra 接口](https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.shortest_paths.weighted.single_source_dijkstra.html)、[Yen 接口](https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.simple_paths.shortest_simple_paths.html) |\n| **rustworkx，Python 接口／Rust 核心** | Dijkstra、A*、有向图和自定义连接代价 | 可以作为性能候选，Python 后端无需因此整体改写；API 与 NetworkX 不同，需要适配，具体速度应实测。[官方文档](https://www.rustworkx.org/) |\n| **JGraphT，Java** | Dijkstra、A*、双向搜索、Yen、Martins 多目标寻路 | 如果需要现成的多目标实现，值得比较；是否采用 Java 后端仍需另行决定。[多目标接口](https://jgrapht.org/javadoc/org.jgrapht.core/org/jgrapht/alg/shortestpath/MartinShortestPath.html) |\n| **pgRouting，PostgreSQL 扩展** | 在数据库中运行 Dijkstra、A*、K 最短路径等 | 适合路网已采用 PostgreSQL／PostGIS 的方案，需要承担数据库集成工作。[官方算法目录](https://docs.pgrouting.org/latest/en/) |\n\n**当前我更倾向先用 NetworkX 验证“有向路网＋通行约束＋可解释代价”，以 Dijkstra 作基准，再比较 A* 和 rustworkx。**候选路线可以分别按最快、省力、无楼梯等规则计算，再去重比较；这样能主动寻找有不同用途的路线。只取“距离最短的前 K 条”再打分，可能漏掉稍远但更省力的路线。多个偏好方案也不等于完整的多目标最优集合。\n\n本轮讨论记录已本地保存、单独提交并推送到 `main`；算法与参数仍是讨论候选。",
+        "text": "Hi Apostrophe! 已完成[完整导航设计 v1](/C:/Users/Apostrophe/Desktop/Mycloud/Catgirl/docs/NAVIGATION_DESIGN.md)，并同步到 [DRD v0.3](/C:/Users/Apostrophe/Desktop/Mycloud/Catgirl/docs/DRD.md)。文档覆盖 **18 类边界情况**，包含复用项目比较、数据模型、算法、参数、接口、复杂度和实施顺序。\n\n**最终推荐组合是：Recast／Detour 可通行几何＋稀疏有向状态图＋Boost.Graph Dijkstra＋独立约束与偏好规则。**复用已有几何与搜索实现，我们补齐校园通行属性、设施状态和 AR 输出。第一版采用 Dijkstra；A* 在验证有效启发函数与实际性能后加入。[Recast Navigation](https://github.com/recastnavigation/recastnavigation)、[Boost.Graph](https://www.boost.org/doc/libs/latest/libs/graph/doc/html/graph/algorithms/shortest_paths/shortest_paths_overview.html)（访问：2026-10-12；可信度：高）。\n\n| 你关心的问题 | 设计中的处理 |\n| --- | --- |\n| **广场和很多出口** | 广场划成相邻可走面，出口接入局部接口；花坛、围栏等作为障碍处理，避免预建出口完全图 |\n| **校园海拔波动** | 保存沿途高度、分段坡度和累计上升下降；起终点同高也可能需要爬坡 |\n| **石板＋草地小路** | 分开记录材质、平整度、缝隙、净宽和通行许可；不默认整片草地可走 |\n| **更多通行边界** | 覆盖路缘、门槛、单级台阶、门禁、单向入口、狭窄开口、过街点，以及桥下／桥上和楼层重叠 |\n| **距离短但不好走** | 先过滤硬限制，再比较时间、体力、路面和辨路负担；按不同用途搜索并去重 |\n| **电梯与复杂连接** | 明确登梯、梯内停靠层和出梯状态；同次乘坐只计一次候梯，不能在不存在出口的楼层离开 |\n| **封路与不确定信息** | 使用状态快照；新增围挡同时处理面内几何。关键属性未知时返回无法确认，不冒充可达 |\n| **AR 与离线衔接** | 返回按空间和楼层分段的三维折线、动作及版本；C++ 内核可供后续评估手机复用，离线定位仍需单独解决 |\n\n你对复杂度的担心需要修正一点：**给每个出口定义端点，本身不会导致平方增长；把所有出口两两连接才会。**100 个出口的完全图有 4,950 对连接，本方案通过局部网格连接控制规模，实际开销仍取决于障碍和地形细节。\n\n我也核对了 Valhalla、PPR、GraphHopper 等完整引擎，文档写明了它们能复用的能力和缺口。当前方案求的是所建状态图上的最优路线，不能宣称任意复杂地形下的连续空间全局最优；“无楼梯”也不能直接称为轮椅可达。\n\n设计文档与会话记录已分别提交到 `main` 并推送。当前完成的是设计，校园数据校准、运行性能和手机 AR 效果仍待验证。",
         "attachments": []
       }
     }
