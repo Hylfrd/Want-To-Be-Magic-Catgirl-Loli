@@ -189,4 +189,4 @@ fix(parser): handle empty input before reading the first record
 
 - 仅在用户为一个根任务明确请求 `full subsession` 或 `full session` 时开启；编辑规则不激活模式。
 - 进入模式、启动委派角色或恢复丢失的规则上下文时，读取 [docs/FULL_SUBSESSION.md](docs/FULL_SUBSESSION.md) 及相关持久化任务状态；中文审阅版见 [docs/FULL_SUBSESSION.zh-CN.md](docs/FULL_SUBSESSION.zh-CN.md)。普通任务不必加载完整协议。
-- 启动提示包含协议路径、共享 `state_root`、角色、任务及父/根会话 ID。所有角色遵守协议；所有提交直接进入 `main`；仅 Main 协調串行 Git 写入和远程推送，子会话不自行推送。
+- 启动提示包含协议路径、共享 `state_root`、角色、任务及父/根会话 ID。所有角色遵守协议；所有提交直接进入 `main`；仅 Main 协调串行 Git 写入和远程推送，子会话不自行推送。
