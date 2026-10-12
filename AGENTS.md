@@ -29,6 +29,7 @@ Explicit instructions for the current task take precedence over the default work
 - Commit all implementation, policy, and AI records directly to existing `main`. Do not bypass this with worktrees, detached HEADs, other clones, temporary refs, or automatic forks; chat/worktree tools must not create branches implicitly. If not on `main`, preserve work and return to existing `main`, never create a replacement branch.
 - Preserve existing branches, tags, issues, and PRs; do not merge, delete, close, rename, or publish them without explicit user direction. Do not interfere with objects the user says they will handle.
 - Sessions may edit disjoint task-owned files on `main` in parallel. Edits to the same file and all staging, commits, and pushes are serialized. If coordination is unavailable, wait for a Git write window rather than create a branch.
+- An assigned Git write window remains with its announced writer until explicit release or handoff. An empty staging area alone does not authorize another session to take that window.
 
 ### Proportionate verification: no test proliferation
 
@@ -83,14 +84,16 @@ ai-logs/
 - Use a portable, readable title slug and a UUID. Keep the filename fixed after creation; update the title inside the JSON when necessary.
 - Use the native session UUID when available. Otherwise, generate a UUID once and preserve it throughout the session. Use `unknown-time` in the filename when the actual start time cannot be established.
 - Assign one writer to each log file. The main agent coordinates registry changes, subagent records, and their references.
+- Before a record handoff or historical backfill, identify the exact paths and session/parent IDs, available source segments, unique writer, unresolved drafts or interruptions, original no-write/no-commit/no-push restrictions, current backfill authorization, and Git write-window owner. Keep this brief inventory in existing task state or visible coordination; untracked files do not establish ownership.
 - Use UTF-8, two-space indentation, and literal Unicode characters. Use ISO 8601 timestamps with a timezone; use UTC in filenames. Keep dialogue in its original language.
 
 ### Content
 
 - Preserve the original text, order, Markdown, and code blocks of human messages and assistant progress messages and final replies visible in the conversation UI. Do not replace the dialogue with summaries.
 - Exclude automatically injected instructions, loaded `AGENTS.md` content, system/developer messages, internal reasoning, context-compaction material, tool calls, tool results, and tool definitions.
-- Distinguish explicitly submitted human text from injected context even when both are stored under the `user` role. A document intentionally pasted for discussion remains human dialogue; an automatically loaded instruction block does not.
+- Classify message origin from available source metadata and context; the transport role `user` alone does not establish human authorship. Distinguish direct human text, agent delegation/coordination, and injected context. Preserve intentional human document quotations; exclude automatically loaded instructions. Retain available origin metadata for delegated messages.
 - Export from available session records or readable conversation APIs. Merge record segments belonging to the same session and deduplicate by source message and turn IDs. Do not assume one local source file contains the whole conversation.
+- Opaque encrypted transport or delegation payloads are not readable dialogue. Restore only verifiable original text; otherwise use an explicit unreadable-input placeholder, retain available source IDs, add `gaps` for the missing message/range, and mark the affected turn's `transcript_status` as `incomplete`. Do not reconstruct original dialogue from summaries, inferred tasks, or returned results.
 - Record the model and reasoning effort for each turn from reliable runtime metadata. Use `null` for unavailable metadata or timestamps; do not guess or substitute the current setting for earlier turns.
 - Never commit credentials or other secrets. Replace sensitive content with an explicit redaction marker and record that redaction occurred. Use a contributor's public alias rather than importing account IDs or private profile data.
 - Mark gaps, interrupted turns, and unavailable text explicitly. Never describe a partial export, summary, or prepared reply as a complete confirmed transcript.
@@ -137,13 +140,15 @@ Use this base structure; values below are illustrative placeholders:
 - `number` increases within this conversation only. `turn_id` and message `id` preserve source IDs when available; otherwise, generate and retain UUIDs.
 - Assistant messages use `role: "assistant"` and `kind: "progress"` or `kind: "final"`.
 - Turn `status` is `in_progress`, `completed`, or `interrupted`. `transcript_status` is `complete`, `pending_final`, or `incomplete`; execution status and transcript completeness are separate facts.
+- Record source-confirmed interrupted or superseded turns even after a newer request arrives. Preserve their readable dialogue and keep unverified drafts outside confirmed `messages`. An interrupted execution can have a complete readable transcript; a completed execution with missing dialogue must remain `incomplete`.
 - `subagent_logs` contains repository-relative paths. `redactions` and `gaps` contain short descriptions associated with the affected message or missing range.
 - Keep extra fields limited to information needed to interpret the dialogue or establish its completeness.
 
 ### Images, attachments, and subagents
 
 - Preserve an attachment placeholder with its type, original basename when available, and a short description sufficient to understand the surrounding dialogue. Label an AI-written description as AI-written.
-- Do not copy attachment binaries, Base64 data, or temporary absolute paths into `ai-logs/`. Do not invent missing attachment contents. Required project deliverables, including actual running screenshots, remain separate deliverables.
+- Separate the actual human request from platform-generated attachment wrappers such as `Files mentioned by the user`, `My request`, image tags, and temporary attachment paths. Use available attachment/origin evidence; remove only verified injected material, preserve intentionally authored quotations or paths, and mark unresolved boundaries as gaps rather than silently guessing or stripping matching text.
+- Do not copy attachment binaries, Base64 data, or platform-generated temporary attachment paths into `ai-logs/`. Do not invent missing attachment contents. Required project deliverables, including actual running screenshots, remain separate deliverables.
 - A subagent record additionally contains `parent_conversation_id`, `parent_turn_id`, and `task_name`.
 - In full subsession mode, every delegated Submain and Subsession is a subagent for recording purposes, even though it runs as a separate sidebar-visible chat. Store its record in `ai-logs/subagent/`, link it from its immediate parent's turn, and preserve the root Main ID when the parent is another subagent.
 - Distinguish delegated prompts and coordination messages from direct human messages using source metadata when available. Preserve their visible original text; do not label agent-generated instructions as human-authored requests.
@@ -157,9 +162,11 @@ Use this base structure; values below are illustrative placeholders:
 - Create one dedicated AI-record commit for that turn, containing only the relevant `AI_USAGE.md` and `ai-logs/` changes. Multiple writes during the turn belong to this single checkpoint. Do not create empty commits.
 - Commit implementation changes and other project documentation separately. `AGENTS.md` changes are project-policy changes, not conversation-record changes.
 - Use explicit owned file paths when staging. Inspect the staged diff before committing. If unrelated work is already staged, preserve it and report the blocked checkpoint rather than including, unstaging, or overwriting that work.
+- Before an AI-record checkpoint, review only the affected task-owned records for valid JSON, message origin, attachment wrappers, opaque/missing text, source IDs and per-turn metadata, duplicate sources, gaps/completeness, and unverified drafts. This is a focused source/diff review, not authorization for a new exporter framework, test suite, or CI gate.
 - Prepare the exact final reply before the checkpoint. Store an unsent draft as a separate `pending_final` object, with `transcript_status: "pending_final"`; keep confirmed `messages` limited to actual dialogue. Send the same reply after the checkpoint, or update the pending draft if the outcome changes.
-- At the next opportunity, reconcile the pending reply against the actual conversation record, append the confirmed message, and remove `pending_final`. If delivery or source text cannot be verified, retain an explicit gap. Forced termination cannot be claimed to have produced a successful checkpoint.
+- At the next opportunity, reconcile the pending reply against an actual delivered assistant message in available session records or readable conversation APIs. Append the delivered text and its available source metadata, then remove `pending_final`. A saved draft, matching wording, completed tool call, or successful commit alone does not prove delivery. If delivery or source text cannot be verified, retain the unconfirmed draft separately and mark the gap. Forced termination cannot be claimed to have produced a successful checkpoint.
 - A no-commit restriction permits local recording only when writing is allowed. A no-write restriction permits no log writes. Report any remaining checkpoint gap; respect explicit no-push restrictions.
+- Check original restrictions before calling historical local records an omission: complying with an earlier prohibition is intentional deferral, not an automatic-checkpoint failure. Backfill only within a later verified user authorization; do not override old restrictions implicitly or claim that prohibited checkpoints succeeded at the time.
 - Automatic pushing is authorized by default for this repository and does not require separate user confirmation. Explicit task restrictions, including no-push instructions, take precedence.
 - In full subsession mode, the [full subsession protocol](docs/FULL_SUBSESSION.md) replaces automatic pushing by individual child sessions: only Main coordinates integration and remote pushes for the root task. Each child still records its turns and makes separate implementation and AI-record commits directly on `main` during an assigned serialized Git write window.
 - Treat a fully handled user request, including a discussion-only turn, as a task completion boundary. Keep checkpoints local while that request is unfinished; do not wait for the entire project to be finished.
