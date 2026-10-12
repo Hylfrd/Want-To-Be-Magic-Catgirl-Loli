@@ -1,0 +1,182 @@
+{
+  "schema_version": 1,
+  "conversation_id": "01a12e29-8e51-7c81-b30c-7b36163bbb81",
+  "title": "AI pipeline model and cost choice",
+  "participant": "Apostrophe",
+  "client": "codex-app",
+  "agent": {
+    "id": "AGENT-001",
+    "key": "openai/codex"
+  },
+  "started_at": "2026-10-12T03:30:38.073Z",
+  "parent_conversation_id": "01a12bc4-7d0a-7bf2-9406-61fe2718c5fc",
+  "parent_turn_id": "01a12e1f-12aa-75d1-b851-d37aa3f3793b",
+  "task_name": "ai_pipeline_choice",
+  "turns": [
+    {
+      "number": 1,
+      "turn_id": "01a12e29-9135-7c53-a900-b0f04cdb92e7",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "xhigh",
+      "status": "completed",
+      "transcript_status": "complete",
+      "messages": [
+        {
+          "id": "e9375abc-3d89-44e8-997a-bb06e2195901",
+          "role": "user",
+          "timestamp": "2026-10-12T03:30:39.530Z",
+          "text": "用户授权主会话独立完成整个 Catgirl DRD，为后续开发直接引用。你负责 AI 的明确模型/部署/输入输出/价值/成本方案，做最小必要官方来源研究，只读 DRD，不编辑 DRD/NAVIGATION_DESIGN，不 staging/commit/push，不创建branch/worktree/PR/issue，不发送sidebar消息，不启用full subsession。不调用实际付费模型API，不处理密钥或安装包。工作区 C:/Users/Apostrophe/Desktop/Mycloud/Catgirl；读 AGENTS.md 与 docs/DRD.md。约束：Python＋FastAPI，独立Python Worker＋SQLite任务表；地图手机仅采集与上传，服务器处理；导航定位/AR在手机持续跟踪，AI返回OCR地标候选并非精确位姿。有限离线不依赖AI。考虑时间、复杂度与费用，我倾向确定服务器本地预训练 PaddleOCR/PP-OCRv5 CPU识别＋仅疑难图片/导航说明调用第三方阿里云百炼Qwen视觉模型，不首版自部署大VLM；请官方核查并给出一个明确可用的模型ID、区域/兼容API形式、价格（人民币/百万tokens及图像token计价规则）和有假设的单次/小规模月费用，建议可配置低预算限额。重型视频仅抽关键帧OCR，VLM不逐帧调用；模型给语义候选/证据/提示，人审核地图，C++决策路线；不宣称从普通单目视频已能自动重建精确校园。请使用native web.run search_query与官方来源，每次针对必要缺口，不广泛做竞争研究。若所选模型存在response_format等限制请准确给出服务器JSON验证方案，不假称保证json schema。输出具体导入/在线接口的输入输出、限流与失败降级、保存/删除图像策略、AI可测增益指标及预算公式，明确价格时间点与前提；不要把未实测效果承诺为结果。你拥有ai-logs/subagent下你会话JSON，记录明确委派原文、可读进度、最终结果与source/model元数据，排除父历史/注入/工具和不透明密文，不提交。父conversation_id=01a12bc4-7d0a-7bf2-9406-61fe2718c5fc，父project turn_id=01a12e1f-12aa-75d1-b851-d37aa3f3793b。最后报告日志路径与native会话ID。",
+          "attachments": [],
+          "origin": {
+            "kind": "agent_delegation",
+            "sender": "/root",
+            "source": "readable runtime NEW_TASK",
+            "source_call_id": "call_cfb86fcde35d4150b6061997cb0dae0a"
+          }
+        },
+        {
+          "id": "msg_0efd074655899b18016acc5464e9888191a28f389b7e553fb4",
+          "role": "assistant",
+          "kind": "progress",
+          "timestamp": "2026-10-12T03:30:52.588Z",
+          "text": "Hi Apostrophe! 我会核查 AI 方案的官方模型、调用方式与费用，并明确导入和导航时的输入输出、降级方式；实测效果会保留为验收项。",
+          "attachments": []
+        },
+        {
+          "id": "msg_0efd074655899b18016acc547058348191b759942c32a77db0",
+          "role": "assistant",
+          "kind": "progress",
+          "timestamp": "2026-10-12T03:31:04.140Z",
+          "text": "我会使用 web-research 技能，限定在 PaddleOCR 与阿里云百炼的官方资料，核对首版必需的兼容性和计费条件。",
+          "attachments": []
+        },
+        {
+          "id": "msg_0efd074655899b18016acc54c183108191a30cb17d97a8e667",
+          "role": "assistant",
+          "kind": "progress",
+          "timestamp": "2026-10-12T03:32:21.883Z",
+          "text": "官方资料已确认：服务器 CPU 可以运行预训练 OCR；百炼当前公开支持的视觉模型可通过 OpenAI 兼容接口调用。图像也按 Token 收费，适合只处理疑难关键帧，避免逐帧付费和等待。",
+          "attachments": []
+        },
+        {
+          "id": "7f32af9a-5077-4b80-9cd1-a2a7230ecdeb",
+          "role": "assistant",
+          "timestamp": "2026-10-12T03:32:34.722Z",
+          "text": "AI 官方核查发现更新：当前实时百炼模型/API文档明确支持 qwen3-vl-plus；旧 qwen-vl-plus 的独立页面重定向，搜索缓存价格与实时页面有差异。建议首版确定服务器 CPU PaddleOCR PP-OCRv5 明确模型名＋第三方 qwen3-vl-plus 非思考模式（北京地域），不依赖旧版可用性。当前实时价格 ≤32K 输入为 ¥1/百万输入、¥10/百万输出。json_object 支持、json_schema 官方支持列表不包含 Qwen3-VL，所以须 Python/Pydantic 实际字段与语义验证。新版推荐 base_url 为 https://{WorkspaceId}.cn-beijing.maas.aliyuncs.com/compatible-mode/v1，旧 dashscope 域名仍可用。最终会给预算、接口/降级和引用。",
+          "attachments": [],
+          "origin": {
+            "kind": "agent_coordination",
+            "sender": "/root/ai_pipeline_choice",
+            "recipient": "/root",
+            "source": "readable runtime coordination",
+            "source_call_id": "fc_0efd074655899b18016acc54cc13448191939d8075a6e37ce0"
+          },
+          "kind": "progress"
+        },
+        {
+          "id": "98f51e34-6389-4491-80f2-59002f670c01",
+          "role": "assistant",
+          "timestamp": "2026-10-12T03:33:39.922Z",
+          "text": "AI 执行分工需一个小约束：单 Python Worker 的视频导入不能整段视频占住 OCR 到完成；可在帧/小批处理边界检查在线识别任务优先级，同一 SQLite 任务表加 kind 与简单 priority 即可，无新队列框架。在线等待超过 10 秒则返回 unavailable 并继续基础导航，勿把厂商300秒超时当用户等待。我会用一张 1024×768 场景图＋约500文本tokens＋最多500输出，qwen3-vl-plus 估算单次 ¥0.00627；3000在线疑难调用＋300导入疑难图片≈¥20.69/月（不含服务器，免费额度不纳入）。",
+          "attachments": [],
+          "origin": {
+            "kind": "agent_coordination",
+            "sender": "/root/ai_pipeline_choice",
+            "recipient": "/root",
+            "source": "readable runtime coordination",
+            "source_call_id": "fc_0efd074655899b18016acc550d03cc8191986b63338ce39839"
+          },
+          "kind": "progress"
+        },
+        {
+          "id": "c2ae7773-c547-4609-aadb-c88e3e52f37c",
+          "role": "user",
+          "timestamp": "2026-10-12T03:35:09.999Z",
+          "text": "采纳 qwen3-vl-plus 与明确CPU OCR模型。在线识别不能依赖导入Worker队列：导入还有几何/路网构建，无法只在帧边界保证及时响应。请改为API进程一个有界在线OCR执行通道（模型单实例串行），独立Worker仍只负责导入；二者进程各有OCR实例，不加第三服务/队列框架。在线通道忙或超时明确降级；模型线程实际未结束时不能假称取消/释放容量。请给出适合CPU首版的mobile_det/mobile_rec型号（效果待样例验证）与memory/latency未实测前提，不造性能数字。10秒可设用户等待上限目标，不能当已经测得的响应。",
+          "attachments": [],
+          "origin": {
+            "kind": "agent_coordination",
+            "sender": "/root",
+            "recipient": "/root/ai_pipeline_choice",
+            "source": "readable runtime coordination"
+          }
+        },
+        {
+          "id": "fba820e3-1672-48c1-a499-642d387845d3",
+          "role": "assistant",
+          "timestamp": "2026-10-12T03:35:34.541Z",
+          "text": "收到，按你指定的分工修正：API进程（首版单worker）持有一个 PP-OCRv5_mobile_det＋PP-OCRv5_mobile_rec CPU实例，以单并发执行通道且无等待队列处理在线识别；独立导入Worker持有另一实例，不引入第三服务。10秒只作用户等待上限，超时保留实际在运行任务的占位直到线程结束，不能释放槽或声称推理已取消。双实例总内存/实际耗时待目标服务器样例验证；不引用官方机器benchmark为本项目实测。我会在最终方案按该分工说明。",
+          "attachments": [],
+          "origin": {
+            "kind": "agent_coordination",
+            "sender": "/root/ai_pipeline_choice",
+            "recipient": "/root",
+            "source": "readable runtime coordination",
+            "source_call_id": "fc_0efd074655899b18016acc55807f6c8191911a02ba0b847f21"
+          },
+          "kind": "progress"
+        },
+        {
+          "id": "msg_0efd074655899b18016acc559992a48191ba9ecd5e25d40366",
+          "role": "assistant",
+          "kind": "progress",
+          "timestamp": "2026-10-12T03:36:01.243Z",
+          "text": "方案已收敛为“本地 OCR 打底、云端视觉只补疑难语义”。我会把预算写成可执行的限额，并要求 AI 结果带图片证据和地图版本；识别失败、超时或费用用完时，继续使用基础导航。",
+          "attachments": []
+        },
+        {
+          "id": "msg_0efd074655899b18016acc565749808191b9e68d5b3f1ace99",
+          "role": "assistant",
+          "kind": "final",
+          "timestamp": "2026-10-12T03:39:43.839Z",
+          "text": "Hi Apostrophe! AI 方案可直接收敛为以下开发基线；没有调用付费 API，没有编辑 DRD，也没有执行 Git 写操作。\n\n首版选择服务器本地 **PaddleOCR：`PP-OCRv5_mobile_det`＋`PP-OCRv5_mobile_rec`，`device=\"cpu\"`**；`mobile` 是轻量模型的名称，实际仍在服务器运行。显式指定模型，不能依赖 `PaddleOCR()` 的默认版本：当前官方文档默认已经是 PP-OCRv6。导入 Worker 与 API 在线通道各加载一个实例；总内存、并发负载和目标服务器耗时尚未测量，不能套用官方测试机的速度。[PaddleOCR 官方 OCR 文档](https://www.paddleocr.ai/main/version3.x/pipeline_usage/OCR.html)\n\n疑难图片与导入阶段的说明草稿使用阿里云百炼 **`qwen3-vl-plus`，华北 2（北京），非思考模式**，不自部署或微调大型 VLM。首版通过服务器的 OpenAI 兼容 Chat Completions 接口调用；推荐 `base_url=https://{WorkspaceId}.cn-beijing.maas.aliyuncs.com/compatible-mode/v1`，现有 `https://dashscope.aliyuncs.com/compatible-mode/v1` 仍可使用。输入一张 JPEG 的 Base64 data URL＋受限文本上下文；模型配置只在服务器，手机不保存供应商密钥。不启用网页搜索、工具执行或长对话历史。[官方兼容 API](https://help.aliyun.com/zh/model-studio/qwen-api-via-openai-chat-completions)\n\n调用参数采用 `extra_body={\"enable_thinking\": false, \"vl_high_resolution_images\": false}`、`response_format={\"type\":\"json_object\"}`、`max_tokens=512`；每个图像 content 项明确 `max_pixels=1048576`。提示词包含 JSON 关键词。官方明确支持 Qwen3-VL 非思考模式的 JSON Object，但 JSON Schema 支持列表不含该模型；不能宣称供应商保证本项目 Schema。Python/Pydantic 校验有限字段、类型、数量、来源 ID、允许的地图对象 ID、版本与语义边界，未知值为 `null`。截断、缺字段、无证据或未知 ID 的回答视作失败，不用正则拼接半截 JSON。模型 ID 是服务标识，不能当成固定权重版本；保存请求模型 ID、返回的可得模型标识与提示配置版本，改模型配置后复核保留样例。[结构化输出支持范围](https://help.aliyun.com/zh/model-studio/qwen-structured-output)\n\n| 场景 | 输入与处理 | 输出及采用边界 |\n| --- | --- | --- |\n| 导入 | 原视频／照片、capture manifest、建筑／楼层声明、可选轨迹；服务器按固定间隔取帧，保留时间戳，剔除重复和模糊帧；先本地 OCR，维护者选择疑难帧才调用 VLM | 文本、图像区域、来源时间、OCR 原始分数；标识／设施类型／楼层文字／已存在对象关联候选；说明草稿。每一项进入待审核，保留来源；不自动发布几何、宽度、坡度或连通性 |\n| 在线识别 | 用户主动“识别标识”；当前单帧、`scan_id`、`navigation_session_id`、`map_version`、`alignment_epoch`、采集时的可选本地位姿及坐标系；先 OCR＋已发布标识名称／别名匹配，仍歧义时允许 VLM | `recognized_texts`、有限 `candidate_object_ids`、证据区域、`needs_confirmation`、`status`、请求上下文。候选 ID 由服务器核对；保留多个同名结果。只能协助用户确认地标／楼层，不能返回或更新精确手机位姿 |\n| 导航提示 | 已审核来向标识、C++ 给出的设施动作与路线步骤 | 基础转向和 TTS 使用确定模板；AI 在导入阶段产生额外说明草稿，审核后写入地图包。在线照片识别只补候选和证据，不即时生成未经审核的转向指令 |\n\n视频默认每 2 秒取一个 OCR 帧是可调的处理配置，不是覆盖率承诺；维护者必须可手选补帧。10 分钟视频最多先取 300 个定时帧，去重后通常更少；首版单任务自动云端调用为零，维护者可选最多 30 张疑难帧，再受预算限制。普通单目视频仍不负责自动生成精确校园几何；OCR 和 VLM 均不能补造真实净宽、海拔、坐标或门禁连接。\n\n在线接口建议 `POST /api/v1/ai/recognize-landmark`，multipart 包含 `image`＋上表 metadata。采用同步短请求；`status` 区分 `ok`、`ambiguous`、`no_match`、`unavailable`，`unavailable` 再给 `reason=busy|timeout|budget|provider_error|invalid_output`。响应回显上下文与 `evidence_id`，证据区域用原始上传图的归一化坐标，保存缩放／裁剪到原图的映射。客户端只接受仍处于当前识别流程、相同导航会话／地图版本／对齐 epoch 的结果；用户已开始另一识别或重新对齐就丢弃迟到回答。即使上下文一致，候选也不自动覆盖位置或朝向；展示结果后由用户确认或实际定位参照完成对齐。\n\n导入沿用已确定的任务接口，返回 `job_id`，查询任务可得到 OCR／VLM 子阶段和候选来源。OCR 分数作为模型分数保存，不把 0.9 宣称为 90% 的校园正确概率；VLM 自报置信度也不作为自动采纳依据。名称标准化与别名匹配使用已有 Python／SQLite 能力，不增加向量数据库或 Agent 框架。\n\nAPI 首版一个进程，在线 OCR 用单实例、单并发且无等待队列的执行通道；导入 Worker 使用另一个实例，继续负责离线长任务。在线通道忙就立即返回 unavailable。10 秒是在线用户等待上限的设计配置，实际 p50／p95 仍待测；计时包括 OCR、云端调用与校验。OCR 线程到时仍未结束时保留占位，直到实际完成才释放；HTTP 超时也不代表云端停止生成或不收费。在线失败不自动重试，用户可重新取景；导入单张图片在临时错误时最多一次重试，计入预算。供应商 429／5xx、无网络、无配置或预算用完都保留基础导航。\n\n项目默认限制：在线每会话最多一个识别请求在途，云端调用间隔至少 10 秒；每导航会话云端最多 10 次；供应商请求全项目最多两个并发，导入并发占一个。月预算默认 **¥30**、日预算 **¥3**，均可配置，使用现有 SQLite 原子预留／结算小表避免两个进程同时透支；记录供应商 usage 与费用所需的最小字段，不建立新日志栈。预留包含输入估算、图像 Token、最大输出和重试；没收到 usage 的超时请求不直接退回预留。预算不足就不发下一云端请求，本地 OCR 仍可工作。预算是应用发起调用的控制，不应声称能撤销厂商已发生的费用或替代账单。\n\n**价格按 2026-10-12 官方当前北京地域公开原价核查**：`qwen3-vl-plus` 单次输入 ≤32K 时，输入 ¥1／百万 Token、输出 ¥10／百万 Token；32K–128K 为 ¥1.5／¥15，128K–256K 为 ¥3／¥30。首版单图和简短上下文维持第一档。没有把免费额度、缓存折扣或 Batch 折扣当成预算前提。[百炼价格](https://help.aliyun.com/zh/model-studio/model-pricing)\n\nQwen3-VL 图像估算为 `缩放后宽×高/1024＋2`；尺寸在厂商预处理中按 32 对齐并受像素上限影响，实际以响应 usage 为准。文本、图像都属于输入 Token，输出是文本；关闭思考避免把额外思考输出计入本项目回答。以一张 1024×768 图、约 500 文本输入 Token、500 输出 Token 为假设：图像约 770 Token，输入合计 1270，单次 `1270×1/1e6＋500×10/1e6≈¥0.00627`；3000 次在线疑难识别＋300 张导入疑难图片约 **¥20.69／月**。该例不含服务器、CPU、电费、存储和网络，也不代表平均每次真实用量；本地 OCR 没有逐 Token API 费，却不是零计算成本。首版沿用现有服务器，不因 OCR 默认购买 GPU 或新云主机。[图像 Token 计算](https://help.aliyun.com/zh/model-studio/vision)\n\n图像保存规则：导航照片默认只在内存处理，不持久保存；确需临时落盘时完成即删，异常遗留由现有 Worker 在 24 小时内清理。在线响应证据由手机本次画面展示；用户主动提交为地图证据时，才转入导入素材并保留可审核来源。导入原始素材默认保留至审核；发布引用的关键帧保留为证据，未被任何草稿／发布版本引用的原视频默认 30 天后删除，并允许维护者提前删除。删除仍被发布版本引用的证据必须处理引用关系，不能留下虚假来源。向云端发送的是标识裁剪／受限场景图，优先避免人脸和身份文本，去除与任务无关的 EXIF；使用前显示“将当前照片发送到云端识别”，用户可关闭云端增强。应用删除不能表述为已让供应商零保留；供应商的数据处理条件应在接入时核对。\n\nAI 的可测增益：同一批素材、同一最终正确地图，比较纯人工与 AI 辅助的总录入＋修正时间；统计标识漏识、文字错误、关联候选命中／歧义、人工修正比例；比较基础提示与审核后地标提示的判断时间、错误入口和折返；同时记录每批素材和每会话的实际费用与在线 p50／p95。这些是需要验证的收益，不宣称已经减少多少时间或提高多少精度。硬行为验收包括无证据结果不发布、未知 ID 不采用、AI 失败基础导航继续、迟到结果不改位置；识别提升不能替代真实 AR 对齐、跟踪和路线几何验收。\n\n本子任务日志：`ai-logs/subagent/2026-10-12T03-30-38Z-ai-pipeline-choice--01a12e29-8e51-7c81-b30c-7b36163bbb81.json`；native 会话 ID `01a12e29-8e51-7c81-b30c-7b36163bbb81`。日志由本 Agent 写入，尚未提交；最终结果暂存 pending_final，需主 Agent 从实际送达的来源核对后转为 confirmed message。",
+          "attachments": []
+        }
+      ],
+      "subagent_logs": [],
+      "redactions": [],
+      "gaps": []
+    },
+    {
+      "number": 2,
+      "turn_id": "01a12e45-799c-7c23-92cb-18bf7bdbd162",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "xhigh",
+      "status": "completed",
+      "transcript_status": "complete",
+      "messages": [
+        {
+          "id": "642722ae-08d9-4ce1-b4ce-62806341141e",
+          "role": "user",
+          "timestamp": "2026-10-12T04:01:07.624Z",
+          "text": "完整DRD已合并。请仅只读复核docs/DRD.md第6节及9.4：是否误写模型参数支持、价格／图像Token、预算预留／超时槽位、在线证据保存与响应字段。请确认nonthinking/max_pixels/低分辨率具体参数的官方适用范围，避免旧模型参数套用。仅报告必要修正，不继续竞品研究、调用真实付费API、修改设计、Git或增测试。把跟进与结果追加你现有子会话JSON，保持来源与native元数据，交我统一提交。",
+          "attachments": [],
+          "origin": {
+            "kind": "agent_delegation",
+            "sender": "/root",
+            "source": "readable runtime NEW_TASK"
+          }
+        },
+        {
+          "id": "msg_0efd074655899b18016acc5b88aa7c8191a5987a4f3b486f4f",
+          "role": "assistant",
+          "kind": "progress",
+          "timestamp": "2026-10-12T04:01:22.508Z",
+          "text": "Hi Apostrophe! 我会只核对 DRD 的 AI 章节和对应验收项，重点检查参数适用范围、费用估算，以及超时和证据处理是否写准确。",
+          "attachments": []
+        },
+        {
+          "id": "msg_0efd074655899b18016acc5c1f61f48191bfe28d880b528922",
+          "role": "assistant",
+          "kind": "final",
+          "timestamp": "2026-10-12T04:03:44.880Z",
+          "text": "Hi Apostrophe! 第 6 节和 9.4 的模型选择、价格、770 图像 token／¥0.00627 示例、JSON Object 边界及 OCR 超时槽位都正确。必要补充有三处：\n\n1. **第 286 行把“非思考、低分辨率模式”改为明确参数及位置。** 对当前 `qwen3-vl-plus`，HTTP JSON 顶层设置 `enable_thinking=false`、`vl_high_resolution_images=false`；图片 content 项设置 `{\"type\":\"image_url\",\"image_url\":{\"url\":\"data:image/jpeg;base64,...\"},\"max_pixels\":1048576}`，`max_pixels` 与 `image_url` 同级。Python OpenAI SDK 才把两个非标准顶层参数放入 `extra_body`。`false` 表示不启用高分辨率固定上限，像素上限由 `max_pixels` 决定；不要写成 OpenAI 的 `detail=\"low\"` 模式。若误设为 `true`，官方会忽略 `max_pixels`，成本假设随之失效。[视觉参数适用范围](https://help.aliyun.com/zh/model-studio/vision)、[HTTP／SDK 参数位置](https://help.aliyun.com/zh/model-studio/qwen-api-via-openai-chat-completions)\n\n2. **第 307 行补清预算预留的可实现计算。** 8192 UTF-8 字节必须涵盖系统提示、地图上下文和用户文本的总和，不能仅限制 metadata。最简单的保守预留可按首档 32000 输入 token＋512 输出 token：`32000×1/10^6＋512×10/10^6=¥0.03712`，每个实际云端尝试预留 ¥0.04；成功拿到 usage 后按实际费用结算并退回差额，重试重新占额度，无 usage 的超时继续保留。不能用中文字符数／4估 token。第 303 行并发上限应称为“本应用的在途供应商 HTTP 请求”，不能声称厂商超时后正在生成的任务也受本地槽位精确控制。现有“线程实际结束才释放 OCR 槽位”无需修改。\n\n3. **第 319／456 行补清证据生命周期与响应字段。** 手机在本次识别界面保留采集的静态原图；证据框只叠加到这张图，不能画到已经变化的实时摄像头画面。“保存为地图证据”通过既有 `POST /assets` 重新上传该原图及本次上下文，不能引用已从服务器内存删除的临时图。将目前文字描述落实为固定返回键，例如 `status,reason,recognized_texts,candidate_object_ids,evidence_regions,needs_confirmation,request_context`；`request_context` 回显当前已有的 scan／session／map／AR／alignment 字段，`evidence_regions` 为原上传图的归一化框并关联识别文字或候选。`reason` 在非 unavailable 情况可为 null。这不需要增加存图接口或新服务。\n\n现有 ¥1／百万输入、¥10／百万输出的第一档价格及图像 `缩放后宽×高/1024＋2` 估算成立；10 秒是应用等待配置，不是实测响应承诺。没有发现旧 Qwen2.5 的 28×28 图像参数被误用于当前 Qwen3-VL。没有调用付费 API、改设计、执行 Git 或添加测试。\n\n已将跟进及结果追加至原子会话日志：`ai-logs/subagent/2026-10-12T03-30-38Z-ai-pipeline-choice--01a12e29-8e51-7c81-b30c-7b36163bbb81.json`。第一轮 final 已从实际送达来源确认；本轮 final 为 pending_final，交主 Agent 核对并统一提交。native 会话 ID 仍为 `01a12e29-8e51-7c81-b30c-7b36163bbb81`。",
+          "attachments": []
+        }
+      ],
+      "subagent_logs": [],
+      "redactions": [],
+      "gaps": []
+    }
+  ]
+}
