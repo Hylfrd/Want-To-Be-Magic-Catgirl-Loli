@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "conversation_id": "01a12bc4-7d0a-7bf2-9406-61fe2718c5fc",
-  "title": "DRD backend Python suitability discussion",
+  "title": "DRD backend confirmation and map storage discussion",
   "participant": "Apostrophe",
   "client": "codex-app",
   "agent": {
@@ -364,7 +364,7 @@
       "model": "gpt-6.1-sol",
       "reasoning_effort": "xhigh",
       "status": "completed",
-      "transcript_status": "pending_final",
+      "transcript_status": "complete",
       "messages": [
         {
           "id": "msg_01a12c07-ed90-7a40-8078-e6e4aec07059",
@@ -403,6 +403,58 @@
           "text": "Hi Apostrophe! 目前的结论是保留 Python＋FastAPI 为首选候选，先验证一次完整路线查询的接入成本和耗时，再确认。Java 后端的优势是减少语言切换；如果 AI 只调用外部服务，Python 的优势也会缩小。Java＋ARCore 已作为确定条件纳入判断。\n",
           "attachments": [],
           "kind": "progress"
+        },
+        {
+          "id": "msg_0c77e645717eb591016acbca69f43487d0b65a9f58a15eaaee",
+          "role": "assistant",
+          "timestamp": "2026-10-11T17:42:09.932Z",
+          "text": "Hi Apostrophe!\n\n**可以。按照目前的分工，Python＋FastAPI 是合理的后端候选。**但我上一轮把 C++ 接入的成本讲轻了；目前还没有实现或性能实测，不能保证它已经满足导航延迟要求。\n\nJava＋ARCore 原生 Android 已明确。**手机使用 Java，不要求服务器也使用 Java**：手机通过 HTTP 发送请求、接收路线数据，双方遵守同一份数据格式即可。\n\n实际计算这样分配：\n\n| 工作 | 主要执行者 |\n| --- | --- |\n| 上传素材、查询地图、编辑与发布、查看任务状态 | Python／FastAPI |\n| 可通行几何处理、路线搜索、路线指标计算 | C++ 导航内核 |\n| 视频分析、OCR、地图生成等耗时工作 | 独立任务进程，调用相应算法库或模型服务 |\n| 摄像头跟踪、当前位置更新、AR 箭头渲染 | 手机 Java＋ARCore |\n\n例如，你选择“去图书馆”时，服务器算出路线并返回；随后手机根据本地跟踪不断更新箭头。**AR 画面的连续更新不需要服务器逐帧计算。**因此，后端使用 Python 不会直接决定 AR 是否流畅。\n\n真正需要注意的是两件事：\n\n- **重计算怎样执行。**如果用纯 Python 循环处理大量几何或搜索，或者把长时间建图塞进处理请求的线程，会影响响应。`async` 主要帮助处理等待，不能自动加速计算；即使调用 C++，也要安排好执行方式，避免堵住其他请求。[FastAPI 官方说明](https://fastapi.tiangolo.com/async/)\n- **Python 与 C++ 怎样连接。**`ctypes` 能调用动态库，但数据格式、内存释放、错误返回、并发安全都要我们处理。应让内核加载并保留地图，每次提交查询、返回路线，避免反复传递整张地图或逐边跨语言调用。这部分是实际开发工作。[Python 官方说明](https://docs.python.org/3.14/library/ctypes.html)\n\n**如果换成 Java 后端，可以减少语言切换，但仍然需要接入 C++**，例如使用 JNI；Android 的 AR 页面代码也不能直接充当服务器代码。[Java 官方说明](https://docs.oracle.com/en/java/javase/25/docs/specs/jni/intro.html) 如果 AI 只是调用外部 API，Java 同样可以完成，Python 在这方面没有独占优势。\n\n考虑时间，我仍倾向 **Python＋FastAPI 负责接口和任务管理，C++ 负责导航**。理由是接口开发和素材处理比较直接；主要的不确定成本在导航内核接入。先用实际地图跑通一次完整路线查询，确认接入工作量与端到端耗时，再正式确认后端选型。若团队明显更熟悉 Java，这个因素足以重新比较。\n\n上一轮与本轮会话记录已在 `main` 提交；仍有待同步的 DRD 修改，本轮未推送。",
+          "attachments": [],
+          "kind": "final"
+        }
+      ],
+      "subagent_logs": [],
+      "redactions": [],
+      "gaps": []
+    },
+    {
+      "number": 9,
+      "turn_id": "01a12daf-1e46-73a1-ac17-b9c5ed81aa80",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "xhigh",
+      "status": "completed",
+      "transcript_status": "pending_final",
+      "messages": [
+        {
+          "id": "msg_01a12daf-22a0-7df3-8d8b-801b358076e8",
+          "role": "user",
+          "timestamp": "2026-10-12T01:16:54.816Z",
+          "text": "没有问题。确认后下一个\n",
+          "attachments": []
+        },
+        {
+          "id": "msg_0c77e645717eb591016acc3509aa5487d0bfdb34046131ff41",
+          "role": "assistant",
+          "timestamp": "2026-10-12T01:17:04.855Z",
+          "text": "Hi Apostrophe! 后端确认采用 Python＋FastAPI，导航计算继续由 C++ 内核承担。我会把这项决定对齐到 DRD，核对其他会话的修改和提交状态，然后进入下一项。\n",
+          "attachments": [],
+          "kind": "progress"
+        },
+        {
+          "id": "msg_0c77e645717eb591016acc3559d88487d0baad5366a42b2718",
+          "role": "assistant",
+          "timestamp": "2026-10-12T01:18:28.551Z",
+          "text": "Hi Apostrophe! 下一项我建议处理“地图存储、发布与版本一致性”：它决定管理端怎样保存草稿，以及手机怎样拿到完整的地图版本。首版可考虑 SQLite 保存结构化数据、服务器文件目录保存素材，再生成供手机下载的地图包。另一个会话正在修改导航内容，我会等它完成后再更新共享 DRD。\n",
+          "attachments": [],
+          "kind": "progress"
+        },
+        {
+          "id": "msg_0c77e645717eb591016acc36050eb887d0991fb75ca431f4b7",
+          "role": "assistant",
+          "timestamp": "2026-10-12T01:21:41.269Z",
+          "text": "Hi Apostrophe! Python 后端和 Java＋ARCore 已写入 DRD 并提交到 `main`。存储方案中最重要的是区分“可编辑草稿”和“已发布快照”：手机只下载完整版本，管理端的修改不会直接改变正在使用的地图。\n",
+          "attachments": [],
+          "kind": "progress"
         }
       ],
       "subagent_logs": [],
@@ -412,7 +464,7 @@
         "role": "assistant",
         "kind": "final",
         "timestamp": null,
-        "text": "Hi Apostrophe!\n\n**可以。按照目前的分工，Python＋FastAPI 是合理的后端候选。**但我上一轮把 C++ 接入的成本讲轻了；目前还没有实现或性能实测，不能保证它已经满足导航延迟要求。\n\nJava＋ARCore 原生 Android 已明确。**手机使用 Java，不要求服务器也使用 Java**：手机通过 HTTP 发送请求、接收路线数据，双方遵守同一份数据格式即可。\n\n实际计算这样分配：\n\n| 工作 | 主要执行者 |\n| --- | --- |\n| 上传素材、查询地图、编辑与发布、查看任务状态 | Python／FastAPI |\n| 可通行几何处理、路线搜索、路线指标计算 | C++ 导航内核 |\n| 视频分析、OCR、地图生成等耗时工作 | 独立任务进程，调用相应算法库或模型服务 |\n| 摄像头跟踪、当前位置更新、AR 箭头渲染 | 手机 Java＋ARCore |\n\n例如，你选择“去图书馆”时，服务器算出路线并返回；随后手机根据本地跟踪不断更新箭头。**AR 画面的连续更新不需要服务器逐帧计算。**因此，后端使用 Python 不会直接决定 AR 是否流畅。\n\n真正需要注意的是两件事：\n\n- **重计算怎样执行。**如果用纯 Python 循环处理大量几何或搜索，或者把长时间建图塞进处理请求的线程，会影响响应。`async` 主要帮助处理等待，不能自动加速计算；即使调用 C++，也要安排好执行方式，避免堵住其他请求。[FastAPI 官方说明](https://fastapi.tiangolo.com/async/)\n- **Python 与 C++ 怎样连接。**`ctypes` 能调用动态库，但数据格式、内存释放、错误返回、并发安全都要我们处理。应让内核加载并保留地图，每次提交查询、返回路线，避免反复传递整张地图或逐边跨语言调用。这部分是实际开发工作。[Python 官方说明](https://docs.python.org/3.14/library/ctypes.html)\n\n**如果换成 Java 后端，可以减少语言切换，但仍然需要接入 C++**，例如使用 JNI；Android 的 AR 页面代码也不能直接充当服务器代码。[Java 官方说明](https://docs.oracle.com/en/java/javase/25/docs/specs/jni/intro.html) 如果 AI 只是调用外部 API，Java 同样可以完成，Python 在这方面没有独占优势。\n\n考虑时间，我仍倾向 **Python＋FastAPI 负责接口和任务管理，C++ 负责导航**。理由是接口开发和素材处理比较直接；主要的不确定成本在导航内核接入。先用实际地图跑通一次完整路线查询，确认接入工作量与端到端耗时，再正式确认后端选型。若团队明显更熟悉 Java，这个因素足以重新比较。\n\n上一轮与本轮会话记录已在 `main` 提交；仍有待同步的 DRD 修改，本轮未推送。",
+        "text": "Hi Apostrophe!\n\n**已确认：Python＋FastAPI 负责后端接口与任务管理，C++ 内核承担导航计算。**Java＋ARCore 原生 Android 的决定也已对齐到 [DRD](/C:/Users/Apostrophe/Desktop/Mycloud/Catgirl/docs/DRD.md:17)。\n\n下一项是**地图存储、发布与版本一致性**。考虑时间和复杂度，我建议首版采用 **SQLite＋服务器文件目录＋版本化地图包**；这项目前是建议，等待讨论确认。\n\n可以把数据库理解成“可查询、可关联的资料表”，把文件目录理解成“保存素材和生成结果的仓库”：\n\n| 内容 | 建议保存位置 |\n| --- | --- |\n| 建筑、楼层、目的地、通路属性、素材关联、审核与任务状态 | SQLite |\n| 原始视频、照片、楼层图、处理结果 | 服务器文件目录；数据库保存对应标识与位置 |\n| 发布后的导航几何、路网、基础提示与定位参照 | 按版本保存的地图快照，生成供手机下载的地图包 |\n\n**管理端编辑草稿，手机使用已发布快照。**建议发布流程是：\n\n`修改草稿 → 审核 → 构建完整地图包 → 校验完成 → 切换发布版本`\n\n例如，手机正在使用 v3，管理端修改的内容先留在草稿中。发布 v4 时，服务器先准备好所有文件，再更新当前发布版本；手机下载、校验完成后才切换。一次导航的地图、路线和坐标参照必须对应，不能拿 v3 的路线配 v4 的空间数据。下载中断时仍保留完整的旧版本。\n\n寻路时，C++ 内核加载已发布的路网与几何后复用；数据库负责数据管理，查询路线时无需重新从数据库拼整张图。\n\n推荐 SQLite 的主要理由是**首版部署简单**：它不需要单独运行数据库服务器，Python 提供 `sqlite3` 接口，适合单台服务器、写入并发较低的应用。[Python 官方说明](https://docs.python.org/3.14/library/sqlite3.html)\n\n它的限制也明确：**同一时刻只能有一个写入者**。管理接口和 Worker 应使用短事务，视频分析与建图在事务外执行。若首版就需要大量同时写入，或多台服务器共同访问数据库，应改选 PostgreSQL 等数据库服务；不能把“SQLite 简单”当作无限扩展的保证。[SQLite 官方选型说明](https://www.sqlite.org/whentouse.html)\n\n这项选择主要影响数据保存、发布可靠性和后续扩展，不改变已确认的 C++ 寻路路线。\n\nDRD 与本轮记录已在 `main` 分别提交；因包含其他会话的未推送提交，本轮未推送。",
         "attachments": []
       }
     }
