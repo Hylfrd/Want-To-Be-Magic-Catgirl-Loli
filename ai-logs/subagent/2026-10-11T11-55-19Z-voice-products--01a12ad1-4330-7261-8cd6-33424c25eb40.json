@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "conversation_id": "01a12ad1-4330-7261-8cd6-33424c25eb40",
+  "title": "voice_products",
+  "participant": "Apostrophe",
+  "client": "codex-app",
+  "agent": {
+    "id": "AGENT-001",
+    "key": "openai/codex"
+  },
+  "started_at": "2026-10-11T11:55:19.946Z",
+  "parent_conversation_id": "01a12a9a-f650-7211-8b7c-0960978e0584",
+  "parent_turn_id": "01a12ad0-3575-7042-9ded-be9952c2472a",
+  "task_name": "voice_products",
+  "turns": [
+    {
+      "number": 1,
+      "turn_id": "01a12ad1-458e-79a3-8304-721311e920fe",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "xhigh",
+      "status": "completed",
+      "transcript_status": "incomplete",
+      "messages": [
+        {
+          "id": "128a0dd1-0005-5d1c-9b70-c5e68b042565",
+          "role": "user",
+          "timestamp": "2026-10-11T11:55:19.693Z",
+          "text": "[UNAVAILABLE: original agent-authored delegation text is encrypted in the local session record and absent from the readable conversation API.]",
+          "attachments": [],
+          "origin": "agent",
+          "source_thread_id": "01a12a9a-f650-7211-8b7c-0960978e0584",
+          "kind": "delegation",
+          "source_call_id": "call_2c05b995bfa642e29c3d3221ae54cedb"
+        },
+        {
+          "id": "62fe71d4-5704-5b9f-a51e-bc7f83afb8af",
+          "role": "user",
+          "timestamp": "2026-10-11T11:56:59.953Z",
+          "text": "[UNAVAILABLE: original agent-authored coordination text is encrypted in the local session record and absent from the readable conversation API.]",
+          "attachments": [],
+          "origin": "agent",
+          "source_thread_id": "01a12a9a-f650-7211-8b7c-0960978e0584",
+          "kind": "coordination",
+          "source_call_id": "call_c7bd6e64f69144daa73fb228a59cf15f"
+        },
+        {
+          "id": "msg_0d945932411d7049016acb7a0dfd948191833f3aa07e4048bd",
+          "role": "assistant",
+          "timestamp": "2026-10-11T11:59:46.329Z",
+          "text": "Hi Apostrophe! **端侧 AI 窄带语音已经有真实可用软件；“神经模型＋普通 FM 无线硬件”也已有实机研究原型。FocalCodec 包装成产品可以满足题 4，但仅增加录音、压缩、播放界面，新增部分偏弱。**以下是本轴的核查结果，未运行或下载任何程序。\n\n| 已有作品 | 成熟度与实际能力 | 对项目的意义 |\n|---|---|---|\n| **FocalCodec 官方库／第三方网页 Demo** | 官方提供离线语音重建、麦克风流式重建；流式模型载荷 550–800 bit/s，推荐 GPU 实时运行。第三方 Gradio Demo 已能录音／上传、重建播放、下载 tokens，但不是两端通信产品 | 不能把“录音→模型→播放”当主要新增价值；仍可开发真正交付、确认、重传、断点续传等通信能力 |\n| **FreeDV GUI＋RADE** | 真正公开用户软件，官方当前下载页列 **2.4.0**；2.0+ 集成神经 RADE，经声卡连接 HF 电台。有现实无线使用证据，支持普通 PC／Pi 4+ | 是最强的成熟近似作品。“本地 AI 修复无线语音”并非空白方向；用户体验和目标约束要明显不同 |\n| **Lyra＋Google Duo** | Google 2021 年官方已宣布在 Duo 推出 Lyra；开源库有 Android 录音重建与性能示例。现版载荷 3.2/6/9.2 kbps、Android/Linux/Mac/Windows | “用现成神经 codec 做低带宽通话”已经产品化；但仍可针对特殊窄带、离线、消息式通信做新增工程 |\n| **RADE-BBFM** | 针对 VHF/UHF 对讲机的开放研究系统，2025 年论文已用两台市售模拟 UHF 电台实时演示，比较模拟 FM／DStar／神经方案。尚不能认定为任意廉价对讲机即插即用的消费成品 | **与“让糊掉的对讲机更清楚”最直接接近。**可以借鉴，也必须说明差异；不能声称首创原理 |\n\n已读的一手证据：\n\n- **FocalCodec 官方**：[GitHub](https://github.com/lucadellalib/focalcodec)（访问 2026-10-11，High）。README “Available Checkpoints”“Running the Demo”明确区分非流式 0.16/0.33/0.65 kbps 与流式 0.55/0.60/0.80 kbps；demo 功能是 speech resynthesis／voice conversion。官方网页是对照音频展示：[作者主页](https://lucadellalib.github.io/focalcodec-web/)（访问 2026-10-11，High）。\n- **现成 FocalCodec 网页封装**：[作者源码提交](https://huggingface.co/spaces/MihaiPopa-1/FocalCodec-Demo/commit/cb8da7c6e5d8ce00a20acc51e5be6d07b66dc30e)（访问 2026-10-11，High，代码存在的证据）。Gradio 录音／上传→`sig_to_toks`→`toks_to_sig`→播放／下载。**保存 tokens 使用 `torch.save(toks.cpu())`，不是 13-bit 紧凑打包，所以网页“160 bps”标题不能当实际文件或链路码率。**Space 状态显示 Sleeping，本轮未验证运行。\n- **FreeDV 产品及算力门槛**：[RADE 官方说明](https://freedv.org/radio-autoencoder/)（访问 2026-10-11，High）明确 PC／Pi 4+，不支持 ESP32／STM32；SM1000／ezDV 适配器 CPU 与内存不足。经声卡外接 HF 电台，并不需要把算法刷进电台 MCU。[实际软件下载](https://freedv.org/download/)及[接线／用户设置](https://freedv.org/getting-started/)（访问 2026-10-11，High）。**Pi Zero 2 W 没有得到这里的官方实时支持。**\n- **Duo 真实产品证据**：[Google Research，2021-02-25](https://research.google/blog/lyra-a-new-very-low-bitrate-codec-for-speech-compression/)（访问 2026-10-11，High）明确 “rolling out Lyra” 到 Duo。这是历史部署证据，不能据此断言 2026 年 Google Meet 的当前内部配置。现版能力及 Android 示例由[Google 官方仓库](https://github.com/google/lyra)支持（访问 2026-10-11，High）。\n- **BBFM 实机与计算量**：[原作者论文，2025-09-21](https://arxiv.org/html/2509.17286v1)（访问 2026-10-11，High）。§2 列出 ML 约 **1 MB 只读存储**，encoder／decoder 各约 **32 MMAC**，FARGAN 约 **300 MMAC**、主导计算。§6 实机测试使用两台 commodity UHF analog FM radios，**直接访问 FM 调制器／解调器的基带**；还用信号发生器、混频器等校准信道。这个结果证明 FM 硬件路线可行，不能证明普通耳机麦克风接口即插即用。帧是 **4,800 symbols/s**，语音载荷 **2,000 symbols/s**，没有中间固定 bitstream，不能与 400 bit/s 作直接数字比较。[官方项目说明](https://freedv.org/rade-bbfm/)（访问 2026-10-11，High）。\n\n两个补充，防止低估竞品：\n\n- 已有 [RADE 浏览器收发器](https://github.com/Sparks72/rade-tx)（访问 2026-10-11，High，功能由作者源码／README 支持），把真实 C 实现编译成 WASM，本地推理、USB 电台音频、CAT/PTT 控制。作者也明确：已软件与录音验证，实际 over-the-air QSO 仍待证明。**“网页里本地跑神经无线语音”也不是新卖点。**\n- [FreeDV 官方第三方软件清单](https://freedv.org/alternative-freedv-rade-v1-software/)（访问 2026-10-11，High）已有 macOS、Android、浏览器等实现。因此不能把成熟度局限为原版 Windows GUI。\n\n**72 小时最合适的产品范围：电脑上的极窄带语音便笺，而非重做通用实时对讲机。**发送者录几秒，真实打包 token，经过限速链路送到另一端并播放；明确显示包括头部、确认和重传的总字节、等待时间、CPU／内存，以及中文地点、数字的听辨结果。400 bit/s 可以作为**消息式**挑战；最低流式 FocalCodec 本来就超过它，不能承诺连续实时通话。\n\n新增价值应来自其中一个可测的机制，而不是泛化地“加个产品界面”：\n\n1. **按带宽与等待时间选 codec／消息长度**，对比固定模式，证明相同任务的送达时间或总字节改善。\n2. **紧凑打包＋可靠消息交付**，对比直接保存 tensor／整条重传，体现断线后的恢复成本。\n3. **声音与内容可核对**，让发送者回听、接收者标记未听清并仅请求重传必要片段；避免把“声音自然”误当“信息正确”。\n\n优先淘汰：从头训练 codec、承诺 FocalCodec 在 Zero 2 W 实时跑、72 小时内移植到未知对讲机固件、只把现成 demo 换皮、把模拟限速结果说成实际无线传输结果。BBFM 适合作近似作品／后续路线，现阶段不宜成为必须成功的硬件交付门槛。",
+          "attachments": [],
+          "kind": "final"
+        }
+      ],
+      "subagent_logs": [],
+      "redactions": [],
+      "gaps": [
+        "Original delegation text unavailable for message 128a0dd1-0005-5d1c-9b70-c5e68b042565; opaque ciphertext omitted.",
+        "Original coordination text unavailable for message 62fe71d4-5704-5b9f-a51e-bc7f83afb8af; opaque ciphertext omitted."
+      ]
+    }
+  ]
+}

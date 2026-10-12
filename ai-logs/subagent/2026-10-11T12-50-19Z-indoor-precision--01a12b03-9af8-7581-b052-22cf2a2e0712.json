@@ -1,0 +1,189 @@
+{
+  "schema_version": 1,
+  "conversation_id": "01a12b03-9af8-7581-b052-22cf2a2e0712",
+  "title": "indoor_precision",
+  "participant": "Apostrophe",
+  "client": "codex-app",
+  "agent": {
+    "id": "AGENT-001",
+    "key": "openai/codex"
+  },
+  "started_at": "2026-10-11T12:50:19.288Z",
+  "parent_conversation_id": "01a12a9a-f650-7211-8b7c-0960978e0584",
+  "parent_turn_id": "01a12b02-3eb4-7562-b51c-ebcf77b60a9f",
+  "task_name": "indoor_precision",
+  "turns": [
+    {
+      "number": 1,
+      "turn_id": "01a12b03-9fba-7ca2-974c-6bb43e85cfae",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "xhigh",
+      "status": "completed",
+      "transcript_status": "incomplete",
+      "messages": [
+        {
+          "id": "0d594fef-ad56-526f-b76c-9d23b555aa06",
+          "role": "user",
+          "timestamp": "2026-10-11T12:50:18.928Z",
+          "text": "[UNAVAILABLE: original agent-authored delegation text is encrypted in the local session record and absent from the readable conversation API.]",
+          "attachments": [],
+          "origin": "agent",
+          "source_thread_id": "01a12a9a-f650-7211-8b7c-0960978e0584",
+          "kind": "delegation",
+          "source_call_id": "call_cdb81cb3fbed4191be66eb924b456609"
+        },
+        {
+          "id": "e43b5f7d-4ba9-56f2-9fd0-ef44cd543e44",
+          "role": "user",
+          "timestamp": "2026-10-11T12:51:16.702Z",
+          "text": "[UNAVAILABLE: original agent-authored coordination text is encrypted in the local session record and absent from the readable conversation API.]",
+          "attachments": [],
+          "origin": "agent",
+          "source_thread_id": "01a12a9a-f650-7211-8b7c-0960978e0584",
+          "kind": "coordination",
+          "source_call_id": "call_e8131540025a4dccb77fc91db3b9c7ef"
+        },
+        {
+          "id": "msg_0d945932411d7049016acb868ccd408191af5f4433f437547a",
+          "role": "assistant",
+          "timestamp": "2026-10-11T12:53:06.589Z",
+          "text": "Hi Apostrophe! **这条研究轴的结论：首版采用模拟楼层地图，无须 GPS 或海拔；以后接入真实 AR 时，最可控的是“关键节点视觉校准＋路线图＋按需打开 AR”。72 小时不能承诺手机放在口袋里仍持续精确定位全校。**\n\n| 技术 | 能提供什么 | 不能据此承诺什么 |\n|---|---|---|\n| 手机 GNSS／系统定位 | 室外位置、进入哪栋楼的候选 | 室内具体走廊、教室、可靠楼层 |\n| 气压计 | 短时间内上升／下降的相对高度线索 | 一读压力就准确知道第几层 |\n| IMU：加速度计、陀螺仪等 | 步数、旋转、相对移动估计 | 长期无校准的绝对位置 |\n| ARCore／ARKit 的视觉惯性追踪 | 摄像头有足够环境特征时，估计局部位置与朝向 | 自动把局部坐标对应到学校建筑、楼层；摄像头被遮住仍可靠定位 |\n| 已知位置的视觉标记／地标 | 校准节点、楼层和朝向 | 仅解码一个二维码就获得精确 3D 姿态 |\n\n**一、海拔不是室内楼层识别的充分条件。**\n\nGPS.gov 给出的手机开阔天空定位例子约为 **4.9 米水平半径**，建筑附近更差，室内是明确列出的退化原因。这个数不能转换成“高度误差 4.9 米”，更不能据此保证楼层识别。[GPS 官方精度说明](https://www.gps.gov/gps-accuracy-0)\n\n浏览器 Geolocation 的 `altitude` 是相对于 WGS84 椭球的高度，可能为 `null`；它还单独提供 `altitudeAccuracy`。接口有字段不代表手机在楼里实际测得可靠高度，也不是建筑楼层 ID。[W3C Geolocation](https://www.w3.org/TR/geolocation/#altitude-and-altitudeaccuracy-attributes)\n\n**气压计更适合判断“刚才是不是上了一层”。**Android `SensorManager.getAltitude(p0,p)` 明确要求参考海平面压力；使用标准压力只能近似，绝对海拔不准确，但短期相对高度差较有用。[Android SensorManager](https://developer.android.com/reference/android/hardware/SensorManager#getAltitude(float,float))\n\n天气、建筑通风、开关门和不同设备偏差都会扰动压力。一个真实建筑实验发现，HVAC 导致同高度室内外平均约 **0.25 hPa** 差异；论文还观察到开门产生压力变化。这证明“压力变化只由上楼引起”是假设错误，而不是说所有学校都存在同样误差。[原始实验论文](https://userpages.umbc.edu/~nroy/courses/shhasp18/papers/Barometer_Ubicomp15.pdf)\n\nAndroid 官方明确指出并非每台设备都有气压计，须运行时查询。**OnePlus 型号未知，不能先承诺有它。**iPhone 原生 `CMAltimeter` 也应检查可用性，`relativeAltitude` 代表第一次读数以来的高度变化，而非自动识别楼层。[Android 传感器总览](https://developer.android.com/develop/sensors-and-location/sensors/sensors_overview)、[Apple 可用性检查](https://developer.apple.com/documentation/coremotion/cmaltimeter/isrelativealtitudeavailable())、[Apple 相对高度数据](https://developer.apple.com/documentation/coremotion/cmaltitudedata)\n\n**二、放下手机后，导航可以继续，精确视觉追踪不能无条件继续。**\n\nARCore 把摄像头特征和 IMU 数据结合起来；它生成的是相对于周围环境的姿态。ARKit 也采用摄像头特征与运动传感器融合。[ARCore 原理](https://developers.google.com/ar/develop/fundamentals)、[ARKit World Tracking](https://developer.apple.com/documentation/arkit/understanding-world-tracking)\n\n- 手机降低到腰部、镜头仍能看见有纹理的环境，追踪**可能**继续，需实测。\n- 放入口袋、盖住镜头、停止 AR 会话或锁屏后，不能承诺连续精确位置。\n- ARCore 官方要求：相机状态不是 `TRACKING` 时，其姿态不应作为有效结果使用；低照度、缺少特征、剧烈运动和相机不可用都是暂停原因。[Camera tracking state](https://developers.google.com/ar/reference/java/com/google/ar/core/Camera#getTrackingState())、[TrackingFailureReason](https://developers.google.com/ar/reference/java/com/google/ar/core/TrackingFailureReason)\n\n关摄像头后可以用 IMU 推算，但它会积累误差，而且手机朝向与人的走向并不相同——在口袋里、手里摆动、拿起来看屏幕都会改变两者关系。原始 PDR 研究必须专门识别携带姿态、校正方向漂移，不能把“加速度积分＋指南针”当现成可靠定位。[姿态与漂移研究](https://www.mdpi.com/2673-4591/10/1/21)\n\n**因此建议把 AR 做成一种查看方式：平时使用二维图、文字和语音；在岔口或不确定时举起手机，识别定位点并看空间箭头。**这符合不一直举手机的需求。剩余距离若来自步数估计，应标注估计；不确定时提示重新校准。\n\n**三、浏览器原型与持续后台定位是不同工程。**\n\nAndroid 上 WebXR AR 要求 ARCore 支持设备、Google Play Services for AR、兼容浏览器及 HTTPS／localhost。OnePlus 未确认型号，不能直接假设满足；可借 iPhone 也不意味着同一套 WebXR 功能天然兼容。[Google WebXR 要求](https://developers.google.com/ar/develop/webxr/requirements)\n\nW3C Generic Sensor 规定传感器读数只对可见的活动文档开放。**网页转后台、锁屏后持续采集 IMU，不能作为普遍保证。**[W3C Generic Sensor](https://www.w3.org/TR/generic-sensor/#visibility-state)\n\nAndroid 原生应用也有限制：Android 9 起后台应用受传感器事件限制，官方建议使用前台应用或前台服务。原生路线可以处理这些机制，但会增加权限、通知、生命周期和省电策略工程。[Android 官方限制](https://developer.android.com/develop/sensors-and-location/sensors/sensors_overview#sensors-practices)\n\n**四、与用户新选择对应的首版实现建议。**\n\n首版地图用局部建筑坐标，例如：\n\n`buildingId + floorId + (x, y) + 路段连接 + 楼梯/电梯跨层边`\n\n地图比例、楼层标签和跨层连接由导入后确认；模拟人物直接在这套坐标内运动。**不需要学校经纬度、绝对海拔，也不需要真的手机定位。**应明确称为模拟导航和地图导入验证。\n\n将来接入真实 AR 时，要额外建立“地图坐标 ↔ 定位标记坐标 ↔ 相机坐标”的对应关系，含真实尺度、标记位置和朝向。二维码的地点 ID 能告诉程序“这是三楼楼梯口”，但是要在空间中对齐箭头，还需要姿态估计或原生图像锚点。\n\n72 小时可争取：**导入模拟楼层图→人工纠正结构→跨楼层路径规划→模拟步行→关键节点 AR 校准演示。**不要把 AI 导图、AR 展示、持续室内定位和气压融合同时当成已经解决的一项功能。全校无基础设施且放口袋仍精确的目标，暂不可承诺。\n\n本轴仅完成官方资料与原始论文核查，无实机精度测试；全程只读，未写文件、安装工具、操作 Git 或记录日志。",
+          "attachments": [],
+          "kind": "final"
+        }
+      ],
+      "subagent_logs": [],
+      "redactions": [],
+      "gaps": [
+        "Original delegation text unavailable for message 0d594fef-ad56-526f-b76c-9d23b555aa06; opaque ciphertext omitted.",
+        "Original coordination text unavailable for message e43b5f7d-4ba9-56f2-9fd0-ef44cd543e44; opaque ciphertext omitted."
+      ]
+    },
+    {
+      "number": 2,
+      "turn_id": "01a12b0f-c438-7080-a539-89e4f959ecdd",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "xhigh",
+      "status": "completed",
+      "transcript_status": "incomplete",
+      "messages": [
+        {
+          "id": "70da5d01-73ac-503b-9ed1-a5e3eeeb1121",
+          "role": "user",
+          "timestamp": "2026-10-11T13:03:35.980Z",
+          "text": "[UNAVAILABLE: original agent-authored delegation text is encrypted in the local session record and absent from the readable conversation API.]",
+          "attachments": [],
+          "origin": "agent",
+          "source_thread_id": "01a12a9a-f650-7211-8b7c-0960978e0584",
+          "kind": "delegation",
+          "source_call_id": "call_415960b52f8f4667b6ee168894517a65"
+        },
+        {
+          "id": "a0abc9a6-fc44-59cb-9106-533b8ffe7398",
+          "role": "user",
+          "timestamp": "2026-10-11T13:04:33.784Z",
+          "text": "[UNAVAILABLE: original agent-authored coordination text is encrypted in the local session record and absent from the readable conversation API.]",
+          "attachments": [],
+          "origin": "agent",
+          "source_thread_id": "01a12a9a-f650-7211-8b7c-0960978e0584",
+          "kind": "coordination",
+          "source_call_id": "call_9f53bde4910440a18412d4ff64ddf9d9"
+        },
+        {
+          "id": "msg_0d945932411d7049016acb89ac8c7c8191ad3a0687b5c1aa96",
+          "role": "assistant",
+          "timestamp": "2026-10-11T13:06:24.865Z",
+          "text": "Hi Apostrophe! **最适合当前方向的核心因素是“决策点的辨识难度”：人到了入口、岔口或楼梯出口，能不能从来路方向迅速认出正确去向。**这是距离之外的注意力和判断负担，2D、3D、AR 都可以表达；展示维度本身不是选题的核心。\n\n可操作因素如下，首版建议聚焦第一项：\n\n| 因素 | 与长度的区别 | 最小数据与指标 | 验证方法 |\n|---|---|---|---|\n| **决策点辨识难度** | 同样长、同样要转弯的路，一处有清楚门牌／独特地标，另一处几条走廊看起来相同；前者可能更少犹豫 | 节点位置、来路方向、可选分支、从来路能否看到可靠指示；“可靠提示覆盖的决策点数／全部决策点数” | 每节点停顿时间、首次方向选择、回头次数、到达成功率 |\n| **路线指令的理解负担** | “第三个岔口右转”与“饮水机旁右转”指向同一路线，但记忆和确认成本不同 | 转弯序列、地标位置与可辨名称、指令步数；用事实支持的地标生成提示 | 对比普通距离指令与地标指令，测查图次数、偏离所选路线次数和完成时间 |\n| **跨楼层后的重新定向负担** | 即使楼梯长度一样，出来后是否能看见层号、房间号方向、目标入口会影响重新确认方向 | 楼梯／电梯连接哪些层、出口朝向、层号和下一段提示 | 走错层、出楼梯后停顿、错误出口选择，单独于水平长度报告 |\n\n这些指标是**产品原型可用的操作定义**，不是已经验证的普适心理量表。不要直接给每个岔口任意加“10 秒”，然后把结果称为已测的校园寻路成本。\n\n文献中已经有直接支持，且与模拟首版匹配。\n\n**2021 年《Visibility matters during wayfinding in the vertical》**用 **69 名参与者、每人 24 次任务**在桌面虚拟多层建筑中研究目标从来路方向可见／不可见、视线连续／中断的影响；记录到楼梯的时间、垂直视角变化和移动方向。可走空间在实验条件间保持可比较。研究观察到，可见性会改变探索和换层决策。[原始全文](https://pmc.ncbi.nlm.nih.gov/articles/PMC8460814/)\n\n这支持“看得见什么会影响寻路”，**不证明 AR 必然比二维地图好，也不证明 BNBU 已经有同样量级的问题**。研究主要针对不熟悉、无标识辅助的环境和目标可见性；把它延伸到校园路口标牌，需要自己的验证。\n\n**De Cock 等人的研究**显示决策点难度不能只由几何结构或分支数决定：用户特点、开始／结束、转弯、换层等动作都会影响评价。其前期研究用视频呈现 **10 条路线、52 个决策点**，随机安排路线与提示形式，再让人评价复杂度。[作者研究说明](https://ica-abs.copernicus.org/articles/1/55/2019/)、[2021 正式论文及摘要](https://research.tue.nl/en/publications/identifying-what-constitutes-complexity-perception-of-decision-po/)\n\n已有工作也做过地标导航，不能声称首创。2017 年 ILNM 在维也纳经济大学校园把地标纳入室内指令，考虑“地标在转弯前／后”“标签是否可见”“跨层移动”等条件。[原始论文 DOI](https://doi.org/10.3390/IJGI6060183) 此次全文打开受限，但出版方索引呈现了方法与案例，不能据此补造用户测试结果。\n\n**AI 地标提示也已有研究。**CVPR 2022 的 MARKY 从沿途全景图识别地标再生成指令；作者指出未充分依据画面的生成器可能幻觉出不存在的物体。其 Room-to-Room 真人成功率为 71%，人类指令为 75%；这属于特定数据集与英语等语言测试，不是中文校园上线性能。[作者论文](https://arxiv.org/abs/2111.12872)\n\n72 小时最小验证可以诚实完成：\n\n1. **制作两层虚构建筑**，包括入口、数个岔口、两组楼梯、几个目的地。用同一套几何布置设置“标识从来路可见／被遮挡／缺失”，真实记录这些模拟条件。\n2. 用同一虚构场景比较“普通楼层图”和“节点地标／空间指引”。若仅在屏幕三维场景叠箭头，应称为**空间指引模拟**，不能称为实测手机 AR 定位。\n3. 找少量不熟悉地图的人做探索性测试，例如 6–10 人；用不同但相近的路线平衡条件顺序，先在另一张地图练习操作，避免第二次因已经记住路线而占便宜。\n4. 记录成功率、总耗时、节点决策时间、回头、走错层和路径超长量。**选择另一条同样能到目的地的路线不自动算“错误”；“偏离预定路线”与“到错目的地”分开。**\n5. 报告“虚构楼层、模拟移动、真人测试、样本小”；不能说已减少真实 BNBU 学生多少寻路时间，更不能用 AI 模拟人代替真人结果。\n\n更少的数据采集方式：普通平面图提供走廊、门和连接；每个关键节点额外标注一张**从来路看的视角图／照片**与可靠地标。因为俯视图即使正确，也通常无法说明门牌有没有被遮挡、字是否读得清。AI 可以帮助提取结构、识别已出现的地标与草拟提示，但须让维护者确认，不能自动填不存在的标识。\n\n**建议项目问题写成：“让第一次进楼的人，在需要做决定的位置更容易认出正确方向，并比较一条路实际需要付出的辨认成本。”**这样二维地图是信息基础，三维或 AR 是帮助识别的方式，AI 是减少录入和提示制作成本的工具，各自承担明确作用。\n\n本轴只核查原始研究，没有实测 BNBU、采集地图或进行真人测试；全程只读，未写文件／日志或操作 Git。",
+          "attachments": [],
+          "kind": "final"
+        }
+      ],
+      "subagent_logs": [],
+      "redactions": [],
+      "gaps": [
+        "Original delegation text unavailable for message 70da5d01-73ac-503b-9ed1-a5e3eeeb1121; opaque ciphertext omitted.",
+        "Original coordination text unavailable for message a0abc9a6-fc44-59cb-9106-533b8ffe7398; opaque ciphertext omitted."
+      ]
+    },
+    {
+      "number": 3,
+      "turn_id": "01a12b24-e2f2-73a3-9131-aefcb88d3705",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "xhigh",
+      "status": "completed",
+      "transcript_status": "incomplete",
+      "messages": [
+        {
+          "id": "42c46dc8-95cb-53f1-9d9d-03b2c4ca2d54",
+          "role": "user",
+          "timestamp": "2026-10-11T13:26:40.110Z",
+          "text": "[UNAVAILABLE: original agent-authored delegation text is encrypted in the local session record and absent from the readable conversation API.]",
+          "attachments": [],
+          "origin": "agent",
+          "source_thread_id": "01a12a9a-f650-7211-8b7c-0960978e0584",
+          "kind": "delegation",
+          "source_call_id": "call_75c1aed286fa461fbbdb977e1c23f6b4"
+        },
+        {
+          "id": "0cbbb519-5511-5554-ad24-2cbccf06f37c",
+          "role": "user",
+          "timestamp": "2026-10-11T13:27:02.158Z",
+          "text": "[UNAVAILABLE: original agent-authored coordination text is encrypted in the local session record and absent from the readable conversation API.]",
+          "attachments": [],
+          "origin": "agent",
+          "source_thread_id": "01a12a9a-f650-7211-8b7c-0960978e0584",
+          "kind": "coordination",
+          "source_call_id": "call_20383450257c4da1b7af4ef83f5a3dc1"
+        },
+        {
+          "id": "msg_0d945932411d7049016acb8f3eac8c8191a88d96945664a2b5",
+          "role": "assistant",
+          "timestamp": "2026-10-11T13:30:13.661Z",
+          "text": "Hi Apostrophe! **AI 可以帮助“摄像头关掉后继续估计”，但目前查到的开源研究不能直接承诺“手机放口袋仍能精确找到教室”。服务器可以降低手机计算负担，却不能补出没有观测到的位置、楼层和环境。**\n\n当前最适合 Android APK＋服务器的方式是：**手机本地 ARCore 负责实时追踪；服务器间歇做视觉重新定位或惯性模型推理；摄像头关闭时保留估计状态，重新打开后校正。**\n\n**两项原始研究的实际边界**\n\n| 项目 | 实际输入和输出 | 已验证的携带条件 | 是否现成手机 SDK；72 小时判断 |\n|---|---|---|---|\n| **RoNIN** | 校准六轴 IMU，200 Hz；使用系统姿态进行坐标变换。ResNet 输入约一秒 `200×6` 数据，输出二维速度，再积分得到轨迹 | 100 人、三款 Android 手机；包含手持、包中、深口袋等自然携带 | 公开 Python／PyTorch 训练测试代码、预训练模型和 Android **采集** App；未找到完整 Android 在线定位 SDK。服务器试验比端侧移植更合理，准确性需本机验证 |\n| **TLIO** | 200 Hz、一秒六轴窗口；网络预测三维相对位移及不确定性，EKF 融合并估计位置、姿态与传感器偏差 | 原训练数据来自头戴、相机与 IMU 刚性连接的装置，约 60 小时 | 公开 Python 研究管线，README 仍说明需要自己的数据并重新训练；不是即插即用 APK。头戴数据成绩不能直接用于手机口袋 |\n\n来源：[RoNIN 作者项目](https://ronin.cs.sfu.ca/)、[原始论文及补充材料](https://arxiv.org/pdf/1905.12853)、[作者代码](https://github.com/Sachini/ronin)、[TLIO 原始论文](https://arxiv.org/pdf/2007.01867)、[TLIO 作者 README](https://github.com/CathIAS/TLIO/blob/master/README.md)。\n\nRoNIN 的研究确实表明 AI 能比朴素惯性算法处理更多自然动作，但误差仍为米级：其原 RoNIN 基准里，未见过受试者的 ResNet **全轨迹 ATE 约 5.14 米，一分钟相对误差 RTE 约 4.37 米**。这不是“绝对位置始终在五米以内”，更不是某一手机或校园的准确率保证。作者还指出姿态估计差、剧烈摆动的手包等情况会失败。[作者结果表](https://ronin.cs.sfu.ca/)\n\n这些模型估计的是**从初始位置出发的运动**。论文里的 “global frame” 是整个序列一致的参考坐标，不能理解为自动输出学校地图坐标。还需要已知起点、朝向和尺度，才能与楼层图对齐。RoNIN 的二维输出也不能独立解决楼层。\n\nRoNIN 的数据／预训练模型被作者标为研究用途；其公开代码为 GPL-3.0。比赛研究原型可以进一步评估，产品化不能直接假定权重无限制使用。[作者项目与代码](https://ronin.cs.sfu.ca/)\n\n**运行开销也不能凭论文 GPU 推断手机最低配置。**RoNIN 论文在 1080 Ti 上训练，训练约 10–40 小时，说明从头训练不是当前优先路线；不表示每次推理都必须独显。TLIO 训练使用 DGX。两者没有提供足以承诺未知 OnePlus 上实时、耗电和内存的 Android 部署数据。服务器先推理合理，但仍须测处理时间、输入延迟和采样一致性。\n\n**三种“手机放下”的情况不能混为一谈**\n\n| 情况 | 可行性 |\n|---|---|\n| 手低垂，镜头仍看见有纹理的地面／环境，AR 会话运行 | ARCore 可能继续追踪；手机不用始终举到眼前，但不是自动保证 |\n| 手机入袋、盖镜头、暂停摄像头或黑屏 | 不可依赖原视觉追踪；需要单独的 IMU 路线，误差积累 |\n| 胸前固定相机 | 可以保持视觉输入，但增加设备、佩戴和拍摄要求；属于不同产品条件 |\n\nAndroid 原生应用可以采集 IMU，但后台传感器受限制，要处理前台服务与生命周期；200 Hz 是常见 API 限速档位，也不是所有手机必定稳定达到的实际采样率。应按事件时间戳核对频率。[Android 官方传感器文档](https://developer.android.com/develop/sensors-and-location/sensors/sensors_overview)\n\n**服务器纠偏分两种**\n\n- **惯性模型纠偏：**服务器收到 IMU 数据，根据学习到的动作模式估计位移。它仍是相对推算，不能因为模型在服务器就消除漂移。\n- **视觉重新定位：**手机再拍一张当前环境，服务器对照已有视觉地图，做特征匹配与几何姿态求解，得到地图位置候选。`hloc` 已有开源完整管线，但需要参考三维模型／带空间信息的图像库；单张二维楼层图不够。[作者 hloc 项目](https://github.com/cvg/Hierarchical-Localization)\n\n真实视觉重新定位还需要相机参数、参考地图与路线图的坐标对齐及匹配质量门槛。长得很像的走廊可能匹配错；不能用“AI 看图觉得像三楼”直接修正位置。\n\n地图约束能排除穿墙、无连接楼层等不可能路线，却不是新观测。两条相似走廊都可通行时，强行把估计吸附到最近一条可能制造“看起来很准、实际上错路”的结果，应保留多个候选或要求校准。\n\n**72 小时首版最可验证的流程**\n\n1. **摄像头开启：**识别已知位置与朝向的定位卡，把 ARCore 局部坐标接到地图；手机本地实时更新。\n2. **摄像头关闭：**切换二维图／语音，保存最后可信位置、时刻和朝向。先用轻量 PDR 粗估进度，明确显示“估计”；服务器 RoNIN 作为可比较的实验扩展。\n3. **估计变旧：**显示更新时间、位置不确定状态，避免精确到门的指令；到岔口／楼梯口或存在歧义时要求重新确认。\n4. **重新开启：**再次识别定位卡或做可信视觉匹配，纠正地图坐标；不能假设暂停后 ARCore 的局部原点、地图恢复始终成功。\n5. **验收：**在短路线上测试正常手持、低垂、口袋、再打开，记录校准前后端点误差、恢复耗时、错误楼层候选、处理延迟及网络中断行为。\n\nARCore 图像定位有一个具体细节：官方建议避免二维码、条码和重复图案作为 Augmented Images 特征图。**QR 可以编码地点 ID；ARCore 图像锚最好用独特纹理定位卡并提供已知物理尺寸。**若使用 AprilTag／ArUco，应走专门的标记姿态估计实现，不能把两者混为一个接口。[ARCore Augmented Images](https://developers.google.com/ar/develop/augmented-images)\n\n建议把“AI 提升定位准确性”变成一个待验证实验：**同样的手机、同样路径、同样校准点，AI 惯性估计是否优于轻量 PDR，以及重新定位能减少多少误差。**先保证相机开／关／再开完整闭环，不把学习定位模型当首版必须成功的核心依赖。\n\n本轴仅核查论文、作者代码和官方文档；无实机性能或精度测试，全程只读，未安装、写文件／日志或操作 Git。",
+          "attachments": [],
+          "kind": "final"
+        }
+      ],
+      "subagent_logs": [],
+      "redactions": [],
+      "gaps": [
+        "Original delegation text unavailable for message 42c46dc8-95cb-53f1-9d9d-03b2c4ca2d54; opaque ciphertext omitted.",
+        "Original coordination text unavailable for message 0cbbb519-5511-5554-ad24-2cbccf06f37c; opaque ciphertext omitted."
+      ]
+    },
+    {
+      "number": 4,
+      "turn_id": "01a12b5d-fb46-72b0-a8bd-7a7098129043",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "xhigh",
+      "status": "completed",
+      "transcript_status": "incomplete",
+      "messages": [
+        {
+          "id": "6901869c-1113-513e-828f-b9139141bfcb",
+          "role": "user",
+          "timestamp": "2026-10-11T14:29:01.881Z",
+          "text": "[UNAVAILABLE: original agent-authored delegation text is encrypted in the local session record and absent from the readable conversation API.]",
+          "attachments": [],
+          "origin": "agent",
+          "source_thread_id": "01a12a9a-f650-7211-8b7c-0960978e0584",
+          "kind": "delegation",
+          "source_call_id": "call_22d66ea6afd0475b94d547a67505af93"
+        },
+        {
+          "id": "msg_0d945932411d7049016acb9d7aa3c48191bf281cbe126c1924",
+          "role": "assistant",
+          "timestamp": "2026-10-11T14:30:36.523Z",
+          "text": "Hi Apostrophe! **Unity 单客户端可行，MVP 应以自建模拟模式为主，真实 AR 为可选扩展。**\n\n建议客户端共享本地 `MapPackage`、`RouteEngine` 和 `NavigationState`：\n\n- `MapView`：二维楼层、当前节点、路线及辨识难度。\n- `SimulationPoseProvider`：触屏移动虚拟人物，输出建筑局部坐标、朝向、`floorId`；模拟定位明确标注。\n- `ARCorePoseProvider`：AR Foundation 相机姿态＋追踪状态；只有对齐成功、追踪有效时输出可信位置。\n- `NavigationState`：未定位、追踪中、暂停、丢失、等待跨层确认。\n- `RouteRenderer`：同一路径分别显示为地图线、虚拟楼内箭头、真实 AR 箭头；不使用三个独立规划器。\n\n**Unity XR Simulation 是 Editor 测试功能，不能指望它随 APK 直接成为手机模拟器。**APK 的虚拟两层楼、普通相机、触屏控制及模拟姿态提供器必须自己实现。[官方说明](https://docs.unity3d.com/Packages/com.unity.xr.arfoundation@6.3/manual/xr-simulation/simulation.html)\n\n真实 AR 本地基线：预打包独特纹理定位卡，保存其建筑坐标、楼层、朝向与实际尺寸；`ARTrackedImageManager` 检测后建立：\n`地图←AR世界 = 地图←标记 × inverse(AR世界←标记)`。\n二维码可表达节点 ID，专用标记需要独立姿态识别；`hloc` 不是可直接接入的 Android SDK。图像追踪可在设备本地运行。[ARCore 官方文档](https://developers.google.com/ar/develop/augmented-images)\n\n放下手机后保留路线与最后可信位置，切二维／文字／语音；**MVP 不自动推算口袋行走位置**。暂停或追踪丢失时停止精确箭头，恢复后校验原对齐，必要时重新识别标记。跨层用“已到二楼”确认或楼层标记更新，避免单靠相机高度判断。\n\nMVP：两层虚拟楼、路线比较、节点提示、跨层确认、暂停恢复、本地完成全流程。扩展：真实图像锚＋ARCore短路线；惯性融合后置。\n\n**两大风险：**①模拟坐标、地图比例和真实锚点方向不一致，箭头视觉上稳定却指错；②未知手机的 ARCore兼容性、APK构建及暂停恢复，必须尽早实测。AR设为 `Optional`，保证不支持 AR 的手机仍能模拟；断网验收前需完成运行服务安装。[Unity ARCore配置](https://docs.unity3d.com/Packages/com.unity.xr.arcore@6.3/manual/project-configuration-arcore.html)\n\n官方确认 **Unity 6.3 LTS**；其文档发布组合为 **AR Foundation 6.3.5＋ARCore XR Plugin 6.3.5**，建议冻结成配套版本，实际本机环境尚未核验。[Unity支持周期](https://unity.com/releases/unity-6/support)、[包版本](https://docs.unity.com/en-us/engine/6000.3/manual/packages-list/packages-all/pack-safe/com-unity-xr-arfoundation)\n\n全程只读，无实机或构建验证。",
+          "attachments": [],
+          "kind": "final"
+        }
+      ],
+      "subagent_logs": [],
+      "redactions": [],
+      "gaps": [
+        "Original delegation text unavailable for message 6901869c-1113-513e-828f-b9139141bfcb; opaque ciphertext omitted."
+      ]
+    }
+  ]
+}

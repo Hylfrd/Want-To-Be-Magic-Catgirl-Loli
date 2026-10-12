@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "conversation_id": "01a12ad1-0537-7510-98c0-70b46cecd862",
+  "title": "radio_hardware",
+  "participant": "Apostrophe",
+  "client": "codex-app",
+  "agent": {
+    "id": "AGENT-001",
+    "key": "openai/codex"
+  },
+  "started_at": "2026-10-11T11:55:04.082Z",
+  "parent_conversation_id": "01a12a9a-f650-7211-8b7c-0960978e0584",
+  "parent_turn_id": "01a12ad0-3575-7042-9ded-be9952c2472a",
+  "task_name": "radio_hardware",
+  "turns": [
+    {
+      "number": 1,
+      "turn_id": "01a12ad1-079d-7313-ba71-0822350cfd62",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "xhigh",
+      "status": "completed",
+      "transcript_status": "incomplete",
+      "messages": [
+        {
+          "id": "13aa5c55-744b-5fa6-9bd2-bff8ff08cc46",
+          "role": "user",
+          "timestamp": "2026-10-11T11:55:03.825Z",
+          "text": "[UNAVAILABLE: original agent-authored delegation text is encrypted in the local session record and absent from the readable conversation API.]",
+          "attachments": [],
+          "origin": "agent",
+          "source_thread_id": "01a12a9a-f650-7211-8b7c-0960978e0584",
+          "kind": "delegation",
+          "source_call_id": "call_923f62e0939b4de3a398a60f5a6e95f4"
+        },
+        {
+          "id": "6b6ce8de-4c83-5318-b910-48a15e135259",
+          "role": "user",
+          "timestamp": "2026-10-11T11:56:49.577Z",
+          "text": "[UNAVAILABLE: original agent-authored coordination text is encrypted in the local session record and absent from the readable conversation API.]",
+          "attachments": [],
+          "origin": "agent",
+          "source_thread_id": "01a12a9a-f650-7211-8b7c-0960978e0584",
+          "kind": "coordination",
+          "source_call_id": "call_77b6eb04731b42e4bdf35267b32a25d5"
+        },
+        {
+          "id": "msg_0d945932411d7049016acb79fe112481919b3454240121e67a",
+          "role": "assistant",
+          "timestamp": "2026-10-11T11:59:26.473Z",
+          "text": "Hi Apostrophe! **硬件轴结论：普通廉价对讲机适合运行专用无线电控制程序，不能直接部署 FocalCodec 这种数百 MB 的神经模型。72 小时内更合理的是“电脑／外置计算节点处理语音＋无线设备负责传输”，或选已有轻量编解码器支持的数字机。**\n\n已打开核验的代表硬件与报价如下。报价是国外网站零售价，**不是国内行情或制造 BOM 成本**，查询日期 2026-10-11。\n\n| 代表平台 | 计算与存储 | 无线／音频相关器件 | 可核验价格 | 判断 |\n|---|---|---|---|---|\n| **旧款 Quansheng UV-K5，DP32G030 批次** | ARM Cortex-M0，48 MHz；64 KB Flash，**16 KB RAM**；固件程序区通常仅 60 KB | BK4819 模拟对讲射频／音频处理芯片；BK1080 是广播 FM 接收芯片 | Unicom Radio 页面 **US$55**，可加入购物车 | 无法原样跑 FocalCodec；实时 Codec 2 也不能承诺 |\n| **TYT MD-UV380／Retevis RT3S 这一类数字机** | STM32F405 Cortex-M4F；芯片最高 168 MHz；1 MB Flash、192 KB SRAM | AT1846S 无线收发；HR_C6000 数字基带／音频处理 | Retevis 已打开官方页面 RT3S **US$114.99** | 已有 OpenRTX＋Codec 2＋M17，说明轻量数字语音可在此等级硬件落地；大模型不适合 |\n| **LILYGO T-TWR Plus 专用开发板** | ESP32-S3 双核 LX7，240 MHz；16 MB Flash、8 MB PSRAM | SA868 无线收发模块；麦克风、喇叭、PTT | 官网 **US$51.74，缺货** | 开发比黑盒对讲机方便，但仍装不下 FocalCodec；厂家写明不在大陆销售／使用，因此不推荐现在采购 |\n| **用户已有 Zero 2 W** | Cortex-A53 四核 1 GHz；512 MB RAM，microSD 存储 | 只有 Wi-Fi／蓝牙，没有传统窄带无线收发电路 | 官网产品参考 **US$15**，非国内到手价 | 更适合轻量 codec／音频接口／消息转发；尚无 FocalCodec 实时证据 |\n\n数据来源：\n\n- UV-K5 芯片接口与运行时钟：[DualTachyon 原始固件 board.c](https://github.com/DualTachyon/uv-k5-firmware/blob/main/board.c)；Flash／RAM 布局：[firmware.ld](https://github.com/DualTachyon/uv-k5-firmware/blob/main/firmware.ld)；价格：[Unicom Radio](https://unicomradio.com/product/quansheng-uv-k5-dual-band-handheld-transceiver/)。**High，2026-10-11。**\n- 数字机芯片对应关系：[OpenRTX meson.build，MD-UV380 target](https://github.com/OpenRTX/OpenRTX/blob/master/meson.build)；MCU 性能：[ST 官方 STM32F405](https://www.st.com/en/microcontrollers-microprocessors/stm32f405-415.html)；RT3S 报价：[Retevis 官方 Ham 页面](https://www.retevis.com/pages/retevis-ham-radios)。**High，2026-10-11。**\n- 开发板芯片与价格：[LILYGO 商品页](https://lilygo.cc/products/t-twr-plus)，处理器主频：[LILYGO 官方文档](https://wiki.lilygo.cc/products/t-twr-series/t-twr-plus/)。**High，2026-10-11。**\n- Zero 2 W：[Raspberry Pi 官方](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/)。**High，2026-10-11。**\n\n**需纠正一个常见参数：UV-K5 的“8 KB RAM”不宜继续照抄。**本次直接核验的 DP32G030 固件 linker 映射 `0x20000000` 起 **16K RAM**，芯片参考手册的搜索文本也写 16 KB。网页旧文章有 8 KB 的说法，与原始工程不符。表格只代表旧 DP32G030 批次；当前在售 UV-K5 的批次可能换 MCU，购买时必须确认硬件，不能凭外壳型号认定。\n\n**无线芯片能处理声音，不代表能执行任意 AI 模型。**对讲机里面通常分两部分：MCU 管按钮、屏幕、频道和状态；射频／基带芯片负责调制、解调、滤波及特定语音功能。后者不是给用户装 PyTorch 的通用 GPU。\n\nFocalCodec 非流式 25 Hz checkpoint 文件约 **577 MB**：[作者模型文件](https://huggingface.co/lucadellalib/focalcodec_25hz/tree/main)。这超过 Zero 2 W 的总 RAM，更比数字对讲机 192 KB RAM 大三个数量级。SD 卡能存下模型，不代表运行时内存够用。量化、拆分、换运行时也不能直接保证速度、音质和耗电达标。FocalCodec README 明确推荐 GPU 获得实时流式性能：[作者说明](https://github.com/lucadellalib/focalcodec)。主代理已核验流式论文为 249M 参数、H100 实验，80 ms 是算法延迟，**不是 Zero 2 W 实测端到端延迟**。\n\n更轻的 Codec 2 是 C99 实现，700 bit/s 模式已有源码，但 README 明确写 **MCU 实时运行需要硬件 FPU**。旧 UV-K5 Cortex-M0 不是合适的现成实时目标；STM32F405 M4F 则符合硬件等级。[Codec 2 官方 README](https://github.com/drowe67/codec2)。OpenRTX 确认 MD-UV380／RT3S 支持 M17 收发，不过需硬件改动，不能只刷一个固件就完事。[OpenRTX 支持表](https://github.com/OpenRTX/openrtx.github.io/blob/master/dev_status.md)、[M17 硬件要求](https://github.com/OpenRTX/openrtx.github.io/blob/master/M17/m17.md)。**High，2026-10-11。**\n\n对 72 小时交付的建议：\n\n1. **先在电脑上完成双端声音传输与资源实测。**FocalCodec 若要保留，使用现有电脑硬件，不把迁移到廉价对讲机作为交付依赖。\n2. **Zero 2 W 更适合试 Codec 2／轻量音频处理和外置适配器。**需要音频输入输出、供电、PTT 控制，以及两端匹配的 modem／codec；不能把编解码后发一个文件等同于已经完成无线通信。\n3. **只有一台 Pi，可让电脑当另一端。**这是“一端外置原型”，不能称作两个独立手持产品。\n4. 接收声音增强可先做，但须标为“音频增强”，它本身不证明更低链路码率或更远覆盖。\n\n未验证：任何实机跑速、中文音质、功耗、对讲机接口可用性、购买配送；国内当前可得型号／价格、完整制造 BOM。RT3S 搜索快照曾显示 $99.99，而打开后的官方页面显示 $114.99，应优先采用后者并承认价格变化。全程只读，无下载执行、文件写入、日志或 Git 操作。",
+          "attachments": [],
+          "kind": "final"
+        }
+      ],
+      "subagent_logs": [],
+      "redactions": [],
+      "gaps": [
+        "Original delegation text unavailable for message 13aa5c55-744b-5fa6-9bd2-bff8ff08cc46; opaque ciphertext omitted.",
+        "Original coordination text unavailable for message 6b6ce8de-4c83-5318-b910-48a15e135259; opaque ciphertext omitted."
+      ]
+    }
+  ]
+}
