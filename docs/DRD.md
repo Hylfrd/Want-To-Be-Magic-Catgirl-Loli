@@ -190,8 +190,11 @@ Recast／Detour 是独立 C++ 工具集，不要求客户端使用 Unity；发�
 
 同一对象跨修订沿用稳定 UUID 字符串；每个修订保存自己的对象记录，以 `(revision_id, id)` 标识具体内容。`MapRevision` 区分可编辑草稿和已发布快照；发布后的 `revision_id` 作为导航响应的 `map_version`。删除或拆分真实对象时保留旧版本，新增对象使用新 ID，不能把旧路线中的 ID 改指另一个入口。
 
+`Map` 是修订之外的地图容器，保存稳定 `id`、名称与可空的 `published_revision_id`；首次创建时尚无发布版。草稿的坐标定义由 `MapFrame` 保存，分配 `frame_id` 不等于已经完成尺度、方向、高度或 AR 对齐。
+
 | 对象 | 主要字段 | 关联和用途 |
 | --- | --- | --- |
+| `MapFrame` | `id`、`map_id`、米制 ENU 约定、原点／坐标参考／高度基准、`calibration_status`、校准证据 | 随修订保存；初始为 `uncalibrated`，未核实定义及证据为 `null`；校准后仍须独立审核实际几何、高度和定位参照 |
 | `MapRevision` | `id`、`map_id`、`status`、`schema_version`、`frame_id`、`base_revision_id` | 归属一个校园地图，固定该修订的对象和坐标定义；发布快照不可原地改写 |
 | `Level`／`Space` | 楼层的建筑归属、显示名称与可选参考高度；空间的 `level_id`、`kind`、边界几何 | 走廊、房间、大厅和室外区域各有空间身份；室外地面使用明确层身份，高度仍可连续起伏 |
 | `RouteNode` | `space_id`、三维位置、`role`、可选 `portal_id`／`connector_id` | 只保存真实岔路、门口两侧、设施停靠口或目的地入口；可有多个角色，不把全部网格顶点当人工地图节点 |
@@ -498,7 +501,9 @@ AI 的增益需要在相同素材、相同最终正确地图上比较：人工�
 
 真实 AR 先验证一个经测量的房间／短走廊、固定参照、转弯与目的地；跨层结构和复杂地形可先使用模拟地图。模拟路线或小范围成功不代表校园建图、整栋楼精度或导航体验已经通过。地图实测误差、AR 漂移、速度及候梯参数保留来源；未知物理量保持 `null`。
 
-首版每个 AR 对齐区的连续导航范围默认最多沿路线 20 m，区入口及恢复点有固定参照。达到范围、切换空间／楼层或位置不确定时要求重新扫描；数值是受控演示边界，可在对应实测通过后扩大，不能默认为全校园有效。位姿有效标志不等于实时测得误差，不向用户显示编造的“±若干米”。
+首版每个 AR 对齐区的连续导航范围默认最多沿路线 20 m，区入口及恢复点有固定参照；20 m 是待设备实测的路线范围目标，不保证一个参照锚点能稳定呈现全部远端箭头。达到范围、切换空间／楼层或位置不确定时要求重新扫描；数值是受控演示边界，可在对应实测通过后扩大，不能默认为全校园有效。位姿有效标志不等于实时测得误差，不向用户显示编造的“±若干米”。
+
+真实 AR 验收还须记录路线范围、各物体到所属锚点的三维距离、沿途及锚点分组交接处的检查点误差，分别核验第 8.2 节的渲染策略与本节既有 ≤0.5 m／≤1 m 精度目标。锚点处于 `TRACKING`、物体距锚点 ≤8 m 或建立了附近锚点，都不能代替实测精度通过；目前尚无设备实测结果。
 
 ### 导航核验重点与未验证资料
 
@@ -536,9 +541,17 @@ p_MAP_camera是相机点，不是行走落地点。客户端用包内审核可�
 
 固定图像离屏转 `LAST_KNOWN_POSE` 时，相机与锚点仍 `TRACKING` 可继续局部导航；不能要求图像始终在镜头内。相机／锚点失效或新会话则隐藏空间指引，重新扫描后恢复。[Java 跟踪状态](https://developers.google.com/ar/develop/java/augmented-images/guide)
 
+#### 渲染物体与锚点距离
+
+固定参照锚点负责地图与当前 AR 会话的对齐；附近的路线片段可复用它或另建当前会话的局部渲染锚点。首版渲染策略采用物体到所属锚点的三维距离 ≤8 m：路线片段的渲染点也须满足该距离，不能把整条 20 m 路线挂在一个远端参照锚点上。Google 建议避免物体距锚点超过 8 m，并为较远物体使用附近锚点，以减少世界坐标更新引发的意外旋转移动；这是官方实践建议及本项目采用的渲染策略，不是 ARCore 的硬技术上限。[ARCore 锚点指南](https://developers.google.com/ar/develop/anchors)（核对：2026-10-12）。
+
+只为当前位置附近、已确认空间中的行走片段建立渲染分组，同一组的附近箭头共用锚点，不逐点或逐帧新建。使用有效 `T_AR_from_MAP` 初始化分组位置并保存相对锚点的点列，之后随该锚点的当前姿态渲染。前进时为新的附近片段建立／复用锚点，释放不再显示的锚点；远端片段或没有有效附近锚点的片段保留在地图／步骤中，不显示确定性空间箭头。渲染锚点只在当前会话与 `alignment_epoch` 有效，重新对齐、跨层或会话重建后重新生成相应分组。
+
+局部渲染锚点不提供新的地图定位证据，也不改变固定参照的定位路线。不同锚点可能独立更新，必须实测分组交接时的位置／方向一致性和既有检查点误差；不满足时暂停空间指引并增加已测固定参照重扫点或缩小已验证范围，保留 20 m 作为待核验目标，不声称新锚点自动消除了漂移。
+
 地图对象增加 `ReferenceImage`：`id,image_asset_id,image_sha256,physical_width_m,physical_height_m,T_MAP_from_REF,space_id,level_id,alignment_zone_id,evidence_id,review_status`，归属固定 `revision_id/frame_id`。运行态为 `ar_session_id,alignment_id,alignment_epoch,reference_id,map_version,frame_id,observed_at_monotonic_ns,camera_tracking_state,anchor_tracking_state,T_AR_from_MAP,validity`。时间只在同一会话比较，进程结束后对齐失效。
 
-`AlignmentZone` 保存 `id,space_id,level_id,geometry_id,reference_ids,max_route_extent_m`，同修订引用，默认最大连续路线范围20m；它是已验证参照服务的局部区域，不与整栋楼或楼层身份混同。每个宣称支持AR的区域须有已审核参照，区域外只显示地图／手动步骤。
+`AlignmentZone` 保存 `id,space_id,level_id,geometry_id,reference_ids,max_route_extent_m`，同修订引用，默认最大连续路线范围20m；它定义需要实测验证的局部参照服务区域，不与整栋楼或楼层身份混同。每个宣称支持AR的区域须有已审核参照并通过对应范围验收，区域外只显示地图／手动步骤。
 
 ### 8.3 状态与交互
 
@@ -607,6 +620,8 @@ constraints, profile_id, requested_categories[]
 
 `constraints` 只含固定支持字段：`forbid_steps,max_slope,max_cross_slope,min_width_m,max_step_height_m,forbidden_surface_conditions,unknown_policy`（v1 固定 `reject_critical`，不能绕过未知关键属性）。无明确能力阈值时不伪造轮椅认证。通行许可来自审核数据与服务器可信权限；首版只规划公众允许连接，手机不能自报身份突破门禁。
 
+`max_slope` 与 `max_cross_slope` 均为无方向的绝对坡度上限，使用 SI 比值（10% 传 `0.10`），取值为大于或等于 0 的有限实数；缺省／`null` 表示用户未设置该项上限，负值、NaN 和无穷值拒绝为字段错误。地图仍保存有正负号的纵坡和横坡，按实际行走方向计算局部值；硬过滤分别检查实际经过步行面／坡道各局部区间的 `max(abs(s_longitudinal)) <= max_slope` 与 `max(abs(s_cross)) <= max_cross_slope`，不只比较端点平均坡度。上限 `0.10` 会同时排除 `+0.30` 上坡和 `−0.30` 下坡；横坡也不能因朝向改变符号而绕过限制。关键坡度未知仍按 `reject_critical` 返回无法确认；阶差、楼梯及机械乘坐设施继续使用各自规则，不把电梯竖向位移当成步行坡度。首版不增加上下坡分别配置的字段。
+
 `planning_window_s` 默认 600秒，仅用于保守检查时段／状态，不是用户最大 ETA 硬预算。预计行程超过该窗口时返回 `requires_revalidation=true` 并说明后续状态需重核，不据此声称无路线；到有效期暂停受时段／状态影响的转换，联网重核后继续。只纳入整个窗口内可证明开放的时段连接；结果 `valid_until` 为状态／规则／窗口有效期的交集，到期需重核。它是静态保守规划，v1 不解决等门开放或带行程时间预算的资源约束优化。
 
 point_m是审核可走面上的导航落地点，不是相机位置；回传input_point_m/snapped_point_m/snap_distance_m。默认0.75m上限用于同空间／楼层的水平／面内合法吸附，不包含手机离地高度，不跨墙、门户或楼层修正。navigation模式要求有效对齐的reference_tracking来源与已确认空间／楼层，已知uncertainty_m超过默认1m配置上限或落点歧义返回needs_position_confirmation；未知精度不编造数字，仅允许有效对齐受控区的非严格模式。preview模式允许manual_selection地图点，AR会话／alignment／uncertainty可null；返回preview_only=true，不能启用自动位置、步骤或空间箭头。
@@ -631,16 +646,24 @@ point_m是审核可走面上的导航落地点，不是相机位置；回传inpu
 | 接口 | 行为 |
 | --- | --- |
 | `POST /admin/login`、`POST /admin/logout`、`GET /admin/session` | 登录username/password建立Cookie会话；登录／会话查询返回csrf_token和expires_at，管理写请求带X-CSRF-Token；退出失效会话 |
-| `GET /maps`、`GET /maps/{id}/published` | 地图列表、已发布版本、配置与整包下载信息 |
+| `POST /maps` | 管理员提交名称，在一个事务中创建地图、首个空白草稿与未校准 frame，返回201及 `map_id,revision_id,frame_id,edit_seq` |
+| `GET /maps`、`GET /maps/{id}/published` | 管理员可见未发布地图及草稿入口；手机只读列表仅返回已发布地图；已发布版本、配置与整包下载信息，无发布版时返回404／`not_published` |
 | `GET /maps/{id}/destinations?q=` | 名称／别名关键词搜索，返回建筑、楼层和可进入口 |
 | `GET /maps/{id}/state?map_version=` | 与修订兼容的通行快照及有效期 |
 | `POST /assets` | multipart 上传素材／采集描述；完成保存后返回 asset_id，不能用半文件创建任务 |
 | `POST /import-tasks`、`GET /import-tasks/{task_id}`、`POST /import-tasks/{task_id}/retry` | 沿用第 5 节持久任务；处理参数中包含采样配置、AI 开关与输入证据 |
-| `POST /maps/{id}/drafts` | 基于发布修订创建独立草稿，返回 revision_id |
+| `POST /maps/{id}/drafts` | 基于已有发布修订创建独立草稿，返回 revision_id；尚无发布版时返回409／`not_published`，继续使用首次创建返回的空白草稿 |
+| `PUT /drafts/{revision_id}/frame` | 管理员提交坐标定义及校准证据，携带 `expected_edit_seq`；仅修改草稿，返回当前 `frame_id,edit_seq,calibration_status`，不原地改变已发布坐标 |
 | `GET /drafts/{revision_id}`、`PUT /drafts/{revision_id}/objects/{kind}/{id}`、`DELETE` 同路径 | 固定 kind 的对象 CRUD；写入携带 expected_edit_seq，不匹配返回409，避免多窗口覆盖 |
 | `POST /drafts/{revision_id}/validate` | 返回对象／字段／证据的必要发布问题；不是自动认可未知属性 |
 | `POST /drafts/{revision_id}/publish` | 创建构建／发布任务，成功后切换；失败保留草稿和旧发布包 |
 | `POST /ai/recognize-landmark` | multipart image＋metadata，短请求；CPU OCR优先，疑难才云端增强 |
+
+首次建图从空数据库调用 `POST /maps` 即可开始，不依赖既有发布修订：服务器分配三个独立 UUID，草稿 `status=draft,base_revision_id=null,edit_seq=0`，对象与素材关联为空，地图 `published_revision_id=null`。frame 只初始化既定米制 ENU 约定和身份，`calibration_status=uncalibrated`；原点、坐标参考、高度基准及其证据未核实时保留 `null`，不自动生成楼层、零高度几何、图像参照或可下载包。管理页面使用返回的草稿进入素材导入与编辑。
+
+首次校准通过 frame 接口填写有来源的原点、方向、尺度／源图变换及高度基准；可使用明确说明的局部高度基准，不要求虚构地理高程。源图变换仍随对应素材保存；未换算资料保留源坐标，不能冒充米制导航几何。首次未发布校准可完善该草稿 frame；坐标定义改变且影响已发布坐标时，草稿须分配新 `frame_id`，对相关几何及 `T_MAP_from_REF` 明确重做变换或测量并审核，不能只改 frame 标签。已发布快照保持原定义；地图／frame／参照兼容与更新时机仍按第 8、9 节处理。
+
+frame 校准不替代每个楼层／地形高度及定位参照的实际证据。未校准草稿可保存和继续编辑，校准缺口及未知必需高度／参照由 validate 返回对象级原因并阻止发布；发布仍须满足第 11 节的既有检查，不能把首次创建成功当作完成建图或 AR 对齐。
 
 AI metadata 为 `scan_id,navigation_session_id,map_version,ar_session_id,alignment_epoch,captured_at_monotonic_ns,pose_at_capture,pose_frame_id,cloud_allowed`。结果固定键为 `status,reason,recognized_texts,candidate_object_ids,evidence_regions,needs_confirmation,request_context`，status为ok|ambiguous|no_match|unavailable，正常reason可null；证据区域为本次正向编码上传图的归一化框，关联文字／候选，request_context回显scan、navigation_session、map、AR、alignment及采集字段；unavailable 原因为 `busy|timeout|budget|provider_error|invalid_output|not_configured`。一张图仅对应本次识别，不累积长对话。客户端开始另一次识别或重新对齐后丢弃旧回答。
 
