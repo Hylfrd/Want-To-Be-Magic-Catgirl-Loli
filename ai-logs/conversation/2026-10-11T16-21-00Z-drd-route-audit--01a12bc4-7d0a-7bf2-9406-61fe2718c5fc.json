@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "conversation_id": "01a12bc4-7d0a-7bf2-9406-61fe2718c5fc",
-  "title": "DRD AR verification sequence discussion",
+  "title": "DRD AI integration and AR verification discussion",
   "participant": "Apostrophe",
   "client": "codex-app",
   "agent": {
@@ -577,7 +577,7 @@
       "model": "gpt-6.1-sol",
       "reasoning_effort": "xhigh",
       "status": "completed",
-      "transcript_status": "pending_final",
+      "transcript_status": "complete",
       "messages": [
         {
           "id": "msg_01a12dce-9840-7281-911b-45f7cae2249e",
@@ -601,6 +601,50 @@
           "text": "Hi Apostrophe! ARCore 能跟踪手机在本次会话中怎样移动，但地图还需要一个已知位置和朝向的参照，才能与现实对齐。建议把这两项分开验证。图像离开画面后也不能直接判定定位丢失，还要看手机的跟踪与对齐状态。\n",
           "attachments": [],
           "kind": "progress"
+        },
+        {
+          "id": "msg_0c77e645717eb591016acc3e37136487d0aa0308bae7831347",
+          "role": "assistant",
+          "timestamp": "2026-10-12T01:56:08.663Z",
+          "text": "Hi Apostrophe!\n\n下一部分是 **AR 验证顺序**。Java＋ARCore 已确定，我建议先在小范围内验证四个阶段。\n\n先理解关键区别：**ARCore 能估计手机在本次 AR 会话中移动了多少、转向哪里；地图对齐还要告诉它，这个空间对应地图上的什么位置和朝向。**所以基础 AR 能运行之后，还需要验证地图坐标能否正确放进现实环境。[ARCore 基础概念](https://developers.google.com/ar/develop/fundamentals)\n\n| 阶段 | 做什么 | 需要证明什么 |\n| --- | --- | --- |\n| **1. 基础 AR** | 运行官方 Java 示例，放置虚拟物体，再移动和转动手机 | 摄像头、空间跟踪和渲染正常，物体仍对应原来的真实位置 |\n| **2. 已知参照对齐** | 识别一张固定图像，使用它已知的尺寸、地图位置、朝向和楼层 | 每次启动并扫描后，都能把地图放到对应的现实位置 |\n| **3. 小范围路线** | 显示一段已测量、带转弯的固定路线，再接入导航内核输出 | 路径、转弯点和目的地与真实空间对应，移动手机后仍能正确显示 |\n| **4. 丢失与恢复** | 测试遮挡镜头、切到后台，以及重新扫描参照图像 | 跟踪或对齐无效时停止确定性空间指引，恢复后重新核对位置 |\n\n第二阶段可以沿用另一会话正在准备的 **Augmented Images**。例如在门口固定一张图案，事先保存它的实际尺寸和地图位置；手机识别图案并获得其位置、朝向后，应用据此建立地图与本次 AR 空间的对应关系。对齐效果再用门口、拐角等其他已测位置核对。[官方图像跟踪说明](https://developers.google.com/ar/develop/java/augmented-images/guide)\n\n**参照图像离开画面，不等于立即丢失定位。**建立对齐后，只要手机跟踪和对齐仍有效，就可以继续显示路线；重新扫描可用于核对和修正。AR 会话重建时，需要重新确认对齐。长距离的漂移与锚点安排要另行验证，小范围成功不能直接证明整栋楼可靠。[图像跟踪状态](https://developers.google.com/ar/develop/java/augmented-images/guide#supporting_different_use_cases)、[锚点说明](https://developers.google.com/ar/develop/anchors)\n\n考虑时间，先用一个房间或短走廊、一张固定图像和一段带转弯的路线。预置图像数据库和地图后，也可以断网验证这些本地能力。记录初始对齐偏差、行走后的漂移和恢复后的偏差，再确定精度与延迟的验收数值。\n\n**这轮建议确认上述验证顺序，以及固定图像作为首次对齐测试的入口。**正式校园定位方法继续讨论。另一会话目前还在处理 Android 开发环境，实际测试按阶段推进，尚未确认实机通过。\n\n本轮会话记录已在 `main` 提交并推送；验证方案待你确认后再写入 DRD。",
+          "attachments": [],
+          "kind": "final"
+        }
+      ],
+      "subagent_logs": [],
+      "redactions": [],
+      "gaps": []
+    },
+    {
+      "number": 13,
+      "turn_id": "01a12de7-6aa1-7dc2-8963-d06cddbf2bf6",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "xhigh",
+      "status": "completed",
+      "transcript_status": "pending_final",
+      "messages": [
+        {
+          "id": "msg_01a12de7-6af3-7af3-9713-725f008afc46",
+          "role": "user",
+          "timestamp": "2026-10-12T02:18:23.347Z",
+          "text": "AI部分呢，到这里就需要加入AI实现了\n",
+          "attachments": []
+        },
+        {
+          "id": "msg_0c77e645717eb591016acc437387cc87d0b08eb7f66e8da10c",
+          "role": "assistant",
+          "timestamp": "2026-10-12T02:18:41.738Z",
+          "text": "Hi Apostrophe! 对，刚才的验证顺序遗漏了在线 AI 辅助定位这一层。我们需要把它与 ARCore 的本地跟踪、地图坐标对齐接起来，说明 AI 接收什么、输出什么，以及手机何时能据此更新位置。我先核对 DRD 中已有的 AI 边界。\n",
+          "attachments": [],
+          "kind": "progress"
+        },
+        {
+          "id": "msg_0c77e645717eb591016acc44a01d0487d0985fdc5073949553",
+          "role": "assistant",
+          "timestamp": "2026-10-12T02:23:29.644Z",
+          "text": "Hi Apostrophe! 最小 AI 实现可以先跑通“识别门牌、楼层标识 → 匹配地图对象”。但读出“B302”只说明看到了这块门牌，还不能确定手机离门多远、朝向哪里；精确 AR 对齐仍需要几何参照。导入 AI 和导航时的 AI 识别也要分别安排，避免导航请求排在长时间建图任务后面。\n",
+          "attachments": [],
+          "kind": "progress"
         }
       ],
       "subagent_logs": [],
@@ -610,7 +654,7 @@
         "role": "assistant",
         "kind": "final",
         "timestamp": null,
-        "text": "Hi Apostrophe!\n\n下一部分是 **AR 验证顺序**。Java＋ARCore 已确定，我建议先在小范围内验证四个阶段。\n\n先理解关键区别：**ARCore 能估计手机在本次 AR 会话中移动了多少、转向哪里；地图对齐还要告诉它，这个空间对应地图上的什么位置和朝向。**所以基础 AR 能运行之后，还需要验证地图坐标能否正确放进现实环境。[ARCore 基础概念](https://developers.google.com/ar/develop/fundamentals)\n\n| 阶段 | 做什么 | 需要证明什么 |\n| --- | --- | --- |\n| **1. 基础 AR** | 运行官方 Java 示例，放置虚拟物体，再移动和转动手机 | 摄像头、空间跟踪和渲染正常，物体仍对应原来的真实位置 |\n| **2. 已知参照对齐** | 识别一张固定图像，使用它已知的尺寸、地图位置、朝向和楼层 | 每次启动并扫描后，都能把地图放到对应的现实位置 |\n| **3. 小范围路线** | 显示一段已测量、带转弯的固定路线，再接入导航内核输出 | 路径、转弯点和目的地与真实空间对应，移动手机后仍能正确显示 |\n| **4. 丢失与恢复** | 测试遮挡镜头、切到后台，以及重新扫描参照图像 | 跟踪或对齐无效时停止确定性空间指引，恢复后重新核对位置 |\n\n第二阶段可以沿用另一会话正在准备的 **Augmented Images**。例如在门口固定一张图案，事先保存它的实际尺寸和地图位置；手机识别图案并获得其位置、朝向后，应用据此建立地图与本次 AR 空间的对应关系。对齐效果再用门口、拐角等其他已测位置核对。[官方图像跟踪说明](https://developers.google.com/ar/develop/java/augmented-images/guide)\n\n**参照图像离开画面，不等于立即丢失定位。**建立对齐后，只要手机跟踪和对齐仍有效，就可以继续显示路线；重新扫描可用于核对和修正。AR 会话重建时，需要重新确认对齐。长距离的漂移与锚点安排要另行验证，小范围成功不能直接证明整栋楼可靠。[图像跟踪状态](https://developers.google.com/ar/develop/java/augmented-images/guide#supporting_different_use_cases)、[锚点说明](https://developers.google.com/ar/develop/anchors)\n\n考虑时间，先用一个房间或短走廊、一张固定图像和一段带转弯的路线。预置图像数据库和地图后，也可以断网验证这些本地能力。记录初始对齐偏差、行走后的漂移和恢复后的偏差，再确定精度与延迟的验收数值。\n\n**这轮建议确认上述验证顺序，以及固定图像作为首次对齐测试的入口。**正式校园定位方法继续讨论。另一会话目前还在处理 Android 开发环境，实际测试按阶段推进，尚未确认实机通过。\n\n本轮会话记录已在 `main` 提交并推送；验证方案待你确认后再写入 DRD。",
+        "text": "Hi Apostrophe!\n\n**对，这个阶段就需要接入真实 AI 识别，并把它放进 AR 验证流程。**上一版遗漏了“AI 识别 → 地图匹配”这一层。\n\n考虑时间，我建议首版先实现 **服务器 OCR＋地图检索匹配**。OCR 本身就是训练好的视觉模型，可以用 PaddleOCR 的预训练模型识别门牌、楼层标识和指示牌；视觉语言模型随后接入歧义理解和导航说明。PaddleOCR 是当前候选，校园照片上的效果和耗时仍需验证。[官方项目](https://github.com/PaddlePaddle/PaddleOCR)\n\n| 使用阶段 | AI 实际处理什么 | 结果怎样使用 |\n| --- | --- | --- |\n| **地图导入** | Worker 对素材关键帧执行 OCR，提取文字、文字位置和来源帧 | 生成标签候选，关联地图草稿，交给维护者审核 |\n| **开始导航／位置不确定** | 服务器识别当前关键帧中的门牌、楼层和区域标识 | 检索已审核地图，返回候选建筑、楼层和地标及其识别依据 |\n| **导航说明** | 视觉语言模型读取已计算路线和地图事实 | 生成跨层、入口和转向说明，连接与路径仍由地图和 C++ 内核决定 |\n\n具体的在线流程可以是：\n\n`手机上传关键帧 → OCR／视觉理解 → 匹配地图对象 → 几何对齐 → C++ 寻路 → 手机 AR 显示`\n\n**AI 识别到“B302”，并不等于已经知道手机的精确坐标。**它说明你看到了这块门牌，但手机离门多远、面向哪里，还需要几何定位。首版测试可以继续用已知尺寸、位置和朝向的固定图像，通过 ARCore 建立地图与现实空间的对应关系，再验证路线位置。[图像跟踪说明](https://developers.google.com/ar/develop/java/augmented-images/guide)\n\n实现上，建议增加一个识别接口，例如 `POST /ai/location-hints`。手机在开始导航、位置不确定或恢复跟踪时提交关键帧；服务器返回识别文字、证据位置和地图中的候选对象 ID。有多个同号门牌、图片模糊或证据不足时，要求补充画面或人工确认。导航识别与导入的长任务分别调度。\n\n请求和结果还要关联**采集时间、AR 会话、当时的相机位姿及地图版本**。返回结果对应的是采集那一刻；需要结合连续跟踪判断其当前适用性，避免把延迟结果当成手机现在的位置。\n\n因此，验证顺序应调整为：**基础 AR → 真实 AI 识别与地图匹配 → 几何对齐 → 导航与恢复闭环。**第一轮就使用真实照片调用模型，检查正确识别、同号门牌歧义和看不清时的处理，再测响应耗时与对齐误差。\n\n这轮建议确认这套接入方式；OCR 具体版本、视觉语言模型及服务商继续选定。目前是实现方案补充，尚未执行模型推理。\n\n本轮会话记录已在 `main` 提交并推送；AI 接入方案待确认后写入 DRD。",
         "attachments": []
       }
     }
