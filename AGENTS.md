@@ -22,6 +22,7 @@ Explicit instructions for the current task take precedence over the default work
 - Future flexibility, consistency, maintainability, best practices, and spare concurrency do not authorize extra work. Record optional findings briefly; do not implement or dispatch them.
 - If the goal needs an unauthorized addition, explain the blocker and smallest exception before acting. In full subsession mode, escalate through Submain to Main; only the user can expand the goal. Continue independent authorized work.
 - Read [docs/DRD.md](docs/DRD.md) for project goals, scope, map/routing/AR modules, and open decisions when starting design or implementation planning, or when relevant requirements change. It is the development design baseline: follow its confirmed requirements, technical choices, and contracts; change them only through an explicit design decision. Distinguish remaining candidates and unverified targets from confirmed decisions; do not freeze a candidate stack, algorithm, or threshold without a decision, or treat a target as a measured result. Do not reload the whole DRD for every edit.
+- The product name is **Wayglint**. Read [docs/BRAND.md](docs/BRAND.md) for product naming, icon assets, and theme when working on product design or UI. Catgirl is only the existing repository/development codename; do not derive cat, anime, or magic branding from it. Preserve repository names, paths, technical identifiers, and historical records unless explicitly asked to change them.
 
 ### Maintain the roadmap and local planning page
 

@@ -2,6 +2,8 @@
 
 Apply only when the user explicitly enables this mode, subject to the root `AGENTS.md` rules for scope, verification, AI records, and Git. `FULL_SUBSESSION.zh-CN.md` is the Chinese review translation.
 
+The product is **Wayglint**; Catgirl is only the existing repository/development codename. Product and UI tasks must read [BRAND.md](BRAND.md) for the name, icon, and theme alongside the relevant DRD and roadmap contracts. Existing repository names, paths, and historical records are not visual-design references.
+
 
 ### Activation and roles
 
