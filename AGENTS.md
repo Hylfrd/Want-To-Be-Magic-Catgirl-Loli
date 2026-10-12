@@ -39,6 +39,18 @@ Explicit instructions for the current task take precedence over the default work
 - Never weaken acceptance or delete/disable required checks to get a pass. Distinguish pre-existing failures from failures caused by this change.
 - Builds, mocks, and simulations prove only what they exercise. Unavailable environment/device checks remain pending, never passed.
 
+### Comments and Java documentation: useful and concise
+
+- Use comments to add information readers need. Implementation comments explain non-obvious reasons, constraints, or key steps of a genuinely complex algorithm; do not translate code line by line or repeat names and types.
+- Give core classes and nontrivial cross-module interfaces short Javadoc: begin with their purpose, then include only necessary calling contracts. Relevant details may include nullability, units/coordinate systems, threading/lifecycle constraints, resource ownership/release, side effects, or failure behavior. Describe actual behavior, not intended or hypothetical behavior.
+- Do not require documentation on every class, field, or method. Self-explanatory helpers, trivial accessors, and overrides whose inherited documentation is sufficient need no redundant Javadoc. Document meaningful additional behavior or constraints when present.
+- Default to one or two sentences per comment. This is a soft budget, not a line/word limit; important contracts or complex algorithms may need the shortest complete explanation. No comment-count or coverage targets, decorative section banners, or automatic `@param`/`@return` boilerplate. Add tags only when their descriptions convey useful contract information.
+- Use `//` for implementation comments and traditional `/** ... */` for Javadoc. Use `///` Markdown Javadoc only when the configured documentation toolchain is confirmed to support it (JDK 23 or later); this preference does not authorize a toolchain upgrade.
+- Do not put speculative features, unrequested work, change histories, or long design narratives in comments. A TODO must describe a concrete accepted limitation and its blocker or removal condition. Reference existing relevant design documentation when necessary.
+- When changing behavior, update or remove affected stale comments. Maintain comments within the current task's scope; do not start repository-wide annotation sweeps, formatting, or refactoring to satisfy these rules. Follow the surrounding comment language and formatting.
+
+These rules adapt the comment and Javadoc principles in [Google's review guide](https://google.github.io/eng-practices/review/reviewer/looking-for.html#comments), [Google Java Style](https://google.github.io/styleguide/javaguide.html#s7-javadoc), and [AOSP Java style](https://source.android.com/docs/setup/contribute/code-style#use-javadoc-standard-comments). The linked guides do not add requirements beyond this project's explicit rules.
+
 ## 1. Agent registry: `AI_USAGE.md`
 
 - Maintain one entry per agent product, identified by a stable key such as `openai/codex`.
