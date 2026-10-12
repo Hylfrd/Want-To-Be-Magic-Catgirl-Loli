@@ -390,7 +390,7 @@
       "model": "gpt-6.1-sol",
       "reasoning_effort": "xhigh",
       "status": "completed",
-      "transcript_status": "pending_final",
+      "transcript_status": "complete",
       "messages": [
         {
           "id": "msg_01a12c06-7dd4-75a0-8575-21aa362f15ac",
@@ -421,20 +421,80 @@
           "text": "Hi Apostrophe! 收到，当前路线以 **Java + ARCore 原生 Android** 为准，DRD 等稍后更新。注释建议也会按 Java 来写；这条补充不会触发额外代码或文档修改。",
           "attachments": [],
           "kind": "progress"
+        },
+        {
+          "id": "f4df2705-fa77-4654-be84-374286e6bf35",
+          "role": "assistant",
+          "kind": "final",
+          "timestamp": null,
+          "text": "Hi Apostrophe! 收到，项目路线按 **Java + ARCore 原生 Android**，DRD 稍后更新。\n\n注释建议规定：**补充代码中不明显的原因、约束和风险，默认不要求每段代码都有注释。**\n\n可以加这五条：\n\n- **说明原因。** 解释特殊业务规则、生命周期或线程限制、算法取舍、实际兼容问题；不逐行翻译代码，不重复方法名。\n- **默认简短。** 通常 1–2 行；超过 3 行先删重复信息。复杂算法或关键约束允许保留最短的完整解释，不硬卡字数。\n- **没有数量指标。** 不要求每个方法都有 Javadoc，不追求注释覆盖率，不自动堆砌 `@param`、`@return` 模板。\n- **不在注释中扩展任务。** 不写假想功能、未经要求的 TODO、修改流水账或长篇设计背景；已有设计文档可直接引用。\n- **只维护本次涉及的注释。** 修改逻辑时同步修正失效注释，不开展全仓库补注释或借此重构。\n\n例如，这种注释解释了值得保留的原因：\n\n```java\n// Ignore stale responses so an older request cannot replace the latest result.\nif (requestId != latestRequestId) {\n    return;\n}\n```\n\n判断标准：**删掉这条注释，读者是否容易误解行为或误改关键逻辑？** 如果不会，通常就不用写。\n\n这轮未修改 AGENTS.md 或 DRD；会话记录已本地提交，推送仍因其他会话的提交暂缓。",
+          "attachments": []
         }
       ],
       "subagent_logs": [],
       "redactions": [],
-      "gaps": [],
-      "pending_final": {
-        "id": "f4df2705-fa77-4654-be84-374286e6bf35",
-        "role": "assistant",
-        "kind": "final",
-        "timestamp": null,
-        "text": "Hi Apostrophe! 收到，项目路线按 **Java + ARCore 原生 Android**，DRD 稍后更新。\n\n注释建议规定：**补充代码中不明显的原因、约束和风险，默认不要求每段代码都有注释。**\n\n可以加这五条：\n\n- **说明原因。** 解释特殊业务规则、生命周期或线程限制、算法取舍、实际兼容问题；不逐行翻译代码，不重复方法名。\n- **默认简短。** 通常 1–2 行；超过 3 行先删重复信息。复杂算法或关键约束允许保留最短的完整解释，不硬卡字数。\n- **没有数量指标。** 不要求每个方法都有 Javadoc，不追求注释覆盖率，不自动堆砌 `@param`、`@return` 模板。\n- **不在注释中扩展任务。** 不写假想功能、未经要求的 TODO、修改流水账或长篇设计背景；已有设计文档可直接引用。\n- **只维护本次涉及的注释。** 修改逻辑时同步修正失效注释，不开展全仓库补注释或借此重构。\n\n例如，这种注释解释了值得保留的原因：\n\n```java\n// Ignore stale responses so an older request cannot replace the latest result.\nif (requestId != latestRequestId) {\n    return;\n}\n```\n\n判断标准：**删掉这条注释，读者是否容易误解行为或误改关键逻辑？** 如果不会，通常就不用写。\n\n这轮未修改 AGENTS.md 或 DRD；会话记录已本地提交，推送仍因其他会话的提交暂缓。",
-        "attachments": []
-      }
+      "gaps": []
+    },
+    {
+      "number": 9,
+      "turn_id": "01a12c0b-38a2-7213-baf1-08813c709a78",
+      "model": "gpt-6.1-sol",
+      "reasoning_effort": "xhigh",
+      "status": "completed",
+      "transcript_status": "complete",
+      "messages": [
+        {
+          "id": "msg_01a12c0b-38f7-7ab0-824d-5c4750cbb406",
+          "role": "user",
+          "timestamp": "2026-10-11T17:38:15.415Z",
+          "text": "看看HMCL的agents.md和contributing.md 有没有值得参考的东西？然后搜搜典型的、经过验证的方案\n",
+          "attachments": []
+        },
+        {
+          "id": "cb56e30f-b0f4-47d3-93ae-b16d68255805",
+          "role": "assistant",
+          "kind": "progress",
+          "timestamp": null,
+          "text": "Hi Apostrophe! 我会先看 HMCL 的原文，再找成熟 Java 项目的贡献规范和注释指南，筛出适合我们项目、能改善可读性又不会增加负担的规则。",
+          "attachments": []
+        },
+        {
+          "id": "db9a7092-95b1-4eef-874c-ac981c3c2ee3",
+          "role": "assistant",
+          "kind": "progress",
+          "timestamp": null,
+          "text": "我会使用 web-research 技能核对来源。HMCL 先看你本地仓库的两个文件；外部资料优先看 Google 的代码审查指南和 Android 的 Java 规范，并区分哪些是长期使用的实践、哪些只是我们拟定的项目规则。",
+          "attachments": []
+        },
+        {
+          "id": "e2789e20-0288-4823-a855-3ea337a18f38",
+          "role": "assistant",
+          "kind": "progress",
+          "timestamp": null,
+          "text": "HMCL 有一条值得警惕：它要求每个类、字段、方法都写文档，这容易放大你担心的注释数量。成熟指南更有用的地方是区分实现注释和 Javadoc：前者解释非显然的原因，后者说明调用约定，并给简单 getter/setter 留出免写的例外。",
+          "attachments": []
+        },
+        {
+          "id": "67e6793f-1c53-442f-820f-bf9e5d691050",
+          "role": "assistant",
+          "kind": "progress",
+          "timestamp": null,
+          "text": "资料已核对完。建议补上“核心接口写简短调用约定、简单成员可免写文档”，并把之前的 1–2 行改成软预算。还有一个工具链细节：HMCL 强制的 `///` Javadoc 需要 JDK 23 及以上工具支持，Android 项目确认工具链前更适合采用传统 `/** … */`。",
+          "attachments": []
+        },
+        {
+          "id": "553084f8-8680-452c-8e62-25c05831f2f4",
+          "role": "assistant",
+          "kind": "final",
+          "timestamp": null,
+          "text": "Hi Apostrophe! 看过本地 HMCL，也核对了上游原文。**值得借鉴它对文档准确性的要求；“每个类、字段、方法都必须写文档”容易放大注释数量，不适合我们的目标。**\n\nHMCL 的两个文件各有用途：\n\n- [AGENTS.md](https://github.com/HMCL-dev/HMCL/blob/main/AGENTS.md) 要求文档准确描述实际行为、约束和副作用，并在复杂逻辑里添加有用的简短注释。这两条值得采用；全成员强制文档则不建议采用。\n- [Contributing.md](https://github.com/HMCL-dev/HMCL/blob/main/docs/Contributing.md) 主要说明环境、构建命令、产物位置和调试选项。值得参考这种分工：AGENTS 写行为约束，贡献指南写实际操作入口。\n\n我找到的成熟方案有这些共同点：\n\n| 来源 | 可借鉴的规则 |\n| --- | --- |\n| [Google 代码审查指南](https://google.github.io/eng-practices/review/reviewer/looking-for.html#comments) | 实现注释主要解释原因；复杂算法可以解释过程。类、方法的文档则说明用途和使用方式。 |\n| [Google Java Style §7](https://google.github.io/styleguide/javaguide.html#s7-javadoc) | 重视公开接口文档，同时允许简单、显然的成员及部分覆写方法免写 Javadoc。 |\n| [AOSP Java 规范](https://source.android.com/docs/setup/contribute/code-style#use-javadoc-standard-comments) | 类职责、非平凡公开方法需要说明；只重复名称的 getter/setter 文档可以省略。 |\n\n这些是成熟项目实际使用的规范。**我上一轮提出的“1–2 行”只是项目建议，没有查到支持“超过 3 行就不合格”的依据。**\n\n据此，我建议把上一轮方案补强为：\n\n1. **核心类和跨模块接口写短 Javadoc**：一句话说明职责，再补确实需要的调用约定。\n2. **实现注释按需写**：优先解释原因、关键算法步骤，以及容易误用的线程、生命周期、资源归属、坐标系或单位约束。\n3. **简单成员不机械补文档**：不重复方法名、类型或 SDK 已有说明；`@param`、`@return` 只写有信息价值的内容。\n4. **长度采用软预算**：默认一两句话，重要约束允许更长；保留之前“不设数量指标、只维护当前修改范围”的限制。\n\n还有一个兼容细节：HMCL 强制的 `///` Markdown Javadoc 是 JDK 23 起支持的功能。我们的 Android 工具链尚未确认，建议先使用传统 `/** … */`。这里涉及文档工具能否识别，不能简单理解成旧 Java 编译不了三斜杠注释。[Oracle 官方说明](https://docs.oracle.com/en/java/javase/24/javadoc/using-markdown-documentation-comments.html)\n\n本轮仅调查，未修改规范；会话记录已本地保存。其他会话占用了暂存区，按 AGENTS.md 的保护规则暂未提交或推送本轮记录。\n\n<oai-mem-citation>\n<citation_entries>\nMEMORY.md:687-688|note=[located the local HMCL repository and verified it live]\n</citation_entries>\n<rollout_ids>\n</rollout_ids>\n</oai-mem-citation>",
+          "attachments": []
+        }
+      ],
+      "subagent_logs": [],
+      "redactions": [],
+      "gaps": []
     }
   ],
-  "recording_note": "Earlier no-write turns and interrupted turns were backfilled from native session sources after writing was authorized. Interrupted turns are not claimed to have successful AI-record checkpoints; injected attachment metadata is excluded and images have placeholders."
+  "recording_note": "Earlier no-write turns and interrupted turns were backfilled from native session sources after writing was authorized. Interrupted turns are not claimed to have successful AI-record checkpoints; injected attachment metadata is excluded and images have placeholders. Turn 9 was saved locally because another session owned the staging area; its delayed AI-record checkpoint was completed at the next available write window during turn 10."
 }
