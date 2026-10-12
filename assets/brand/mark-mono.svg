@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">Wayglint AR location icon</title>
+  <desc id="desc">A monochrome location marker within four AR viewfinder corners on a transparent background.</desc>
+  <g fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M80 62H70C64 62 60 66 60 72V82M176 62H186C192 62 196 66 196 72V82"/>
+    <path d="M60 174V184C60 190 64 194 70 194H80M196 174V184C196 190 192 194 186 194H176"/>
+  </g>
+  <path fill="currentColor" fill-rule="evenodd" d="M128 76C104 76 84 94 84 118C84 146 120 174 128 180C136 174 172 146 172 118C172 94 152 76 128 76ZM128 102A16 16 0 1 1 128 134A16 16 0 1 1 128 102Z"/>
+</svg>

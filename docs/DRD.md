@@ -1,8 +1,10 @@
-# DRD v1.0｜AI 辅助的校园地图与 AR 导航
+# DRD v1.0｜Wayglint：校园地图与 AR 导航
 
 文档状态：**开发设计基线**，2026-10-12。用户授权独立完成选型与行为设计；本文件规定首版范围、数据、接口、状态和验收目标，供后续开发直接引用。设计完成不代表代码、部署或校园实测完成。实测结果、模型估计和模拟数据必须分别标记。
 
 本文件统一维护产品需求、导航内核与跨模块实施契约，作为后续开发的单一设计依据。后续修改需同步受影响的接口、数据版本和验收行为，不能由实现者默默改变范围。所有版本依赖在首次实现时锁定到兼容稳定版本，不使用移动分支作为构建依赖。
+
+正式产品名称为 **Wayglint**，品牌图标、浅天蓝主题及界面元素遵循 [BRAND.md](BRAND.md)。Catgirl 只保留为现有仓库和本地路径中的开发代号，不是产品名称或视觉方向；不得由此引入猫、动漫或魔法主题。此次品牌同步不代表网页、APK 或校园验收已完成。
 
 ## 1．产品目标与范围
 
@@ -391,7 +393,7 @@ Python＋FastAPI 负责上传、地图维护、版本查询及任务状态接口
 
 导入、AI 分析与建图等耗时任务采用独立 Python Worker＋SQLite 任务表，接口返回任务编号与状态。同步原生调用也需安排执行，避免阻塞其他接口请求；异步接口语法本身不能加速重计算。
 
-管理网页使用 Vite 构建，手机采用 Java＋ARCore 原生 Android；两端沿用 MD3 界面规范并分别复用对应平台组件。手机通过 HTTP 与服务器交换地图、路线和任务数据，客户端语言不要求后端使用同一语言。
+管理网页使用 Vite 构建，手机采用 Java＋ARCore 原生 Android；两端沿用 MD3 界面规范并分别复用对应平台组件，产品名称、图标和明暗主题统一读取 [Wayglint 品牌基线](BRAND.md)。手机通过 HTTP 与服务器交换地图、路线和任务数据，客户端语言不要求后端使用同一语言。
 
 手机首版界面覆盖目的地选择、路线比较、地图／AR 导航、位置确认与跟踪恢复，围绕 Java ARCore 基础接入 Material Components／Material3，按第 8 节状态实施。空间路径与箭头由 AR 渲染层处理，界面组件负责常规操作与提示。
 
@@ -518,6 +520,8 @@ AI 的增益需要在相同素材、相同最终正确地图上比较：人工�
 ### 8.1 Android 与权限
 
 APK 使用 Java、XML Views、Material Components 的 `Theme.Material3.DayNight.NoActionBar`，AR 集成官方 `hello_ar_java` 的 OpenGL／SampleRender 基础；常规按钮、卡片、表单和对话框复用 Material 组件。MDC Views 进入维护模式，但仍提供 Material3，首版采用兼容稳定版本，不改用 Kotlin／Compose 或 Expressive alpha。[MDC 官方说明](https://github.com/material-components/material-components-android/blob/master/docs/getting-started.md)、[ARCore Java 示例](https://developers.google.com/ar/develop/java/quickstart)
+
+A01 设置应用显示名称 **Wayglint**，消费 `assets/brand/` 的图标，并按 [BRAND.md](BRAND.md) 提供 Material3 明暗主题颜色与 adaptive icon 的背景、前景、单色层；A02–A05 继承同一主题。启动器遮罩由 Android 处理，颜色不能掩盖失跟踪、未知位置或路线状态；这些状态仍按第 8.3 节表达。
 
 项目 `minSdk=26`，配置 AR Optional。非 AR 设备可查看地图、路线比较和手动步骤；真实 AR 仍为核心验收。进入 AR 检查支持状态、ARCore 安装／升级和相机权限，不根据侧载成功猜测支持。演示前必须有官方支持且实际会话成功创建的设备。[启用 ARCore](https://developers.google.com/ar/develop/java/enable-arcore)、[支持设备](https://developers.google.com/ar/devices)
 
@@ -678,6 +682,8 @@ Python适配层先解析业务请求，选择与句柄兼容的不可变state/pr
 ## 10．管理网页与三维呈现
 
 使用 Vite＋Vue 3＋TypeScript＋Vuetify 3，显式配置 `md3` blueprint；统一色彩、文字层级、组件状态和间距。蓝图不是定制地图画布自动符合 MD3 的保证。[Vuetify 蓝图](https://vuetifyjs.com/en/features/blueprints/)、[官方 MD3 源码](https://github.com/vuetifyjs/vuetify/blob/v3.9.0/packages/vuetify/src/blueprints/md3.ts)
+
+W01 将 **Wayglint** 接入网页标题、品牌入口及 favicon，使用 [BRAND.md](BRAND.md) 的浅天蓝视觉和明确的明暗主题颜色；W02／W03 继承同一主题。浅蓝用于品牌表面和点缀，交互文字保持足够对比度；地图、路线、审核和错误状态保留其语义，不使用 Catgirl 代号推导视觉元素。
 
 编辑与三维预览统一 Three.js：正交俯视编辑当前楼层的边界、孔洞、路径、门户、设施停靠口、参照及证据；透视预览简化空间、楼层、连廊与跨层路线。当前层之外楼板隐藏／淡化，突出转换动作。建筑形态来自已审核几何，NavMesh 只作调试层，不把可走面称为真实建筑重建。Android 平面图用原生 Canvas，AR 用 OpenGL，共用相同对象与路线，不嵌手机 WebView。[Three.js 文档](https://threejs.org/docs/)
 
